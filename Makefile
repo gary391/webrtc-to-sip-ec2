@@ -1,6 +1,6 @@
 SHELL := /usr/bin/env bash
 
-.PHONY: validate-env detect-ec2-env native-install native-configure native-configure-mariadb native-configure-rtpengine native-configure-kamailio native-configure-nginx native-render-client native-start native-stop native-restart native-status healthcheck collect-debug sip-trace rtp-trace test validate-cloudformation deploy-readiness clean-local-generated
+.PHONY: validate-env detect-ec2-env native-install install-certbot-ip issue-ip-certificate native-configure native-configure-mariadb native-configure-rtpengine native-configure-kamailio native-configure-nginx native-render-client native-start native-stop native-restart native-status healthcheck collect-debug sip-trace rtp-trace test validate-cloudformation deploy-readiness clean-local-generated
 
 validate-env:
 	@ENV_FILE="$${ENV_FILE:-.env}" ./deploy/common/validate-env.sh
@@ -13,6 +13,12 @@ detect-ec2-env:
 
 native-install: validate-env
 	@ENV_FILE="$${ENV_FILE:-.env}" ./deploy/native/install.sh
+
+install-certbot-ip:
+	@./deploy/native/install-certbot-ip.sh
+
+issue-ip-certificate: validate-env
+	@ENV_FILE="$${ENV_FILE:-.env}" ./deploy/native/issue-ip-certificate.sh
 
 native-configure-rtpengine: validate-env
 	@ENV_FILE="$${ENV_FILE:-.env}" ./deploy/native/configure-rtpengine.sh

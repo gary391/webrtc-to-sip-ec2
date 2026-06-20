@@ -83,3 +83,23 @@ configured `30000-30039` range. The initial demo uses userspace forwarding
 
 Both commands leave their services disabled. They still require validation on
 the Debian EC2 instance before their tracked tasks can be marked complete.
+
+## DNS-less IP certificate
+
+Debian 13's packaged Certbot is older than the version required for IP-address
+certificates. Install a current client in an isolated virtual environment:
+
+```bash
+sudo make install-certbot-ip
+sudo ACME_STAGING=true make issue-ip-certificate
+sudo ACME_STAGING=false make issue-ip-certificate
+```
+
+Issuance uses the standalone HTTP-01 server and requires temporary public TCP
+port 80 reachability. Staging files use separate `/etc/letsencrypt-staging`,
+`/var/lib/letsencrypt-staging`, and `/var/log/letsencrypt-staging` directories.
+Production certificates are written below `/etc/letsencrypt/live/<public-ip>/`.
+
+IP certificates are short-lived. Closing port 80 after issuance means renewal
+also requires temporarily reopening it. Do not enable automatic renewal until
+security-group access for the validation window is deliberately automated.
