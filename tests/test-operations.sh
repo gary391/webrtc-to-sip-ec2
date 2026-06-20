@@ -23,5 +23,7 @@ grep -Fq 'systemctl enable --now rtpengine-daemon' "$ROOT_DIR/deploy/native/star
 grep -Fq 'systemctl enable --now kamailio' "$ROOT_DIR/deploy/native/start-services.sh"
 grep -Fq 'mysql://REDACTED:REDACTED@' "$ROOT_DIR/deploy/debug/collect-debug.sh"
 grep -Fq 'coturn is inactive in the default mode' "$ROOT_DIR/deploy/debug/healthcheck.sh"
+grep -Fq 'nginx:$ENABLE_NGINX' "$ROOT_DIR/deploy/native/status.sh"
+grep -Fq 'if [[ $ENABLE_NGINX == true ]]; then' "$ROOT_DIR/deploy/debug/healthcheck.sh"
 
 printf 'Operational tooling static tests passed.\n'

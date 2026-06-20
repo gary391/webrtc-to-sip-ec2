@@ -38,7 +38,7 @@ native-stop:
 native-restart: native-stop native-start
 
 native-status:
-	@./deploy/native/status.sh
+	@ENV_FILE="$${ENV_FILE:-.env}" ./deploy/native/status.sh
 
 healthcheck: validate-env
 	@ENV_FILE="$${ENV_FILE:-.env}" ./deploy/debug/healthcheck.sh

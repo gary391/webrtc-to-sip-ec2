@@ -32,7 +32,9 @@ if [[ $ENABLE_TURN == false ]]; then
 fi
 
 listeners=$(ss -lntupH)
-check 'HTTPS listens on TCP 443' grep -Eq 'LISTEN.*:443([[:space:]]|$)' <<< "$listeners"
+if [[ $ENABLE_NGINX == true ]]; then
+  check 'HTTPS listens on TCP 443' grep -Eq 'LISTEN.*:443([[:space:]]|$)' <<< "$listeners"
+fi
 check 'Kamailio SIP listens on port 5060' grep -Eq '(:5060[[:space:]])' <<< "$listeners"
 check 'RTPEngine control is loopback-only' grep -Eq '127\.0\.0\.1:22222([[:space:]]|$)' <<< "$listeners"
 check 'MariaDB is not publicly bound' bash -c '! grep -Eq "(0\\.0\\.0\\.0|\\[::\\]):3306" <<< "$1"' _ "$listeners"
