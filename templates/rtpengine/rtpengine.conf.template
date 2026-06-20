@@ -1,0 +1,12 @@
+[rtpengine]
+table = -1
+interface = {{PRIVATE_IPV4}}!{{PUBLIC_IPV4}}
+listen-ng = {{RTPENGINE_CONTROL_IP}}:{{RTPENGINE_CONTROL_PORT}}
+port-min = {{RTPENGINE_PORT_MIN}}
+port-max = {{RTPENGINE_PORT_MAX}}
+timeout = 60
+silent-timeout = 3600
+delete-delay = 30
+tos = 184
+log-level = 6
+log-stderr = false

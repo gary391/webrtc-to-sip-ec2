@@ -1,0 +1,35 @@
+name: Validate
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install validation tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y jq ruby
+          python -m pip install --disable-pip-version-check 'cfn-lint<2'
+
+      - name: Run project tests
+        run: make test
+
+      - name: Validate CloudFormation
+        run: cfn-lint infra/cloudformation/webrtc-to-sip-ec2.yaml

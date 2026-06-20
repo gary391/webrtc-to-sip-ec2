@@ -1,0 +1,5 @@
+[mysqld]
+bind-address = 127.0.0.1
+skip-name-resolve
+local-infile = 0
+symbolic-links = 0

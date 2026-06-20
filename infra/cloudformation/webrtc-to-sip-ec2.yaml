@@ -1,0 +1,502 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: >-
+  Locked-down, single-instance Debian 13 foundation for a native WebRTC-to-SIP
+  demo. TURN is disabled by default.
+
+Metadata:
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+      - Label:
+          default: Project
+        Parameters:
+          - ProjectName
+          - EnvironmentName
+      - Label:
+          default: EC2
+        Parameters:
+          - DebianAmiSsmParameter
+          - KeyPairName
+          - InstanceType
+          - CpuCredits
+          - RootVolumeSizeGb
+          - RootVolumeType
+          - UseElasticIp
+      - Label:
+          default: Locked-down networking
+        Parameters:
+          - AdminCidr
+          - DemoClientCidr
+          - EnableSipUdp
+          - EnableSipTcp
+          - EnableHttp80
+          - EnableTurn
+          - RtpPortMin
+          - RtpPortMax
+      - Label:
+          default: Optional DNS and source checkout
+        Parameters:
+          - HostedZoneId
+          - DomainName
+          - CloneRepoOnBoot
+          - RepoUrl
+    ParameterLabels:
+      DebianAmiSsmParameter:
+        default: Latest official Debian 13 amd64 AMI in this region
+      AdminCidr:
+        default: SSH administrator IPv4 /32
+      DemoClientCidr:
+        default: Browser and SIP test client IPv4 /32
+
+Parameters:
+  ProjectName:
+    Type: String
+    Default: webrtc-to-sip
+    AllowedPattern: '^[a-z][a-z0-9-]{1,30}[a-z0-9]$'
+    ConstraintDescription: Use 3-32 lowercase letters, digits, and hyphens.
+  EnvironmentName:
+    Type: String
+    Default: demo
+    AllowedPattern: '^[a-z][a-z0-9-]{1,14}[a-z0-9]$'
+    ConstraintDescription: Use 3-16 lowercase letters, digits, and hyphens.
+  DebianAmiSsmParameter:
+    Type: AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>
+    Default: /aws/service/debian/release/13/latest/amd64
+    Description: >-
+      Public SSM parameter resolving the latest official Debian 13 Trixie amd64
+      AMI in the deployment region. Keep the default unless testing a reviewed
+      replacement image.
+  KeyPairName:
+    Type: AWS::EC2::KeyPair::KeyName
+    Description: Existing EC2 key pair used for the admin SSH login.
+  InstanceType:
+    Type: String
+    Default: t3.medium
+    AllowedValues:
+      - t3.small
+      - t3.medium
+      - t3.large
+  CpuCredits:
+    Type: String
+    Default: standard
+    AllowedValues:
+      - standard
+      - unlimited
+  RootVolumeSizeGb:
+    Type: Number
+    Default: 30
+    MinValue: 20
+    MaxValue: 100
+  RootVolumeType:
+    Type: String
+    Default: gp3
+    AllowedValues:
+      - gp3
+  AdminCidr:
+    Type: String
+    AllowedPattern: '^(?!0\.0\.0\.0/0$)([0-9]{1,3}\.){3}[0-9]{1,3}/32$'
+    ConstraintDescription: Supply the current administrator public IPv4 address as /32.
+  DemoClientCidr:
+    Type: String
+    AllowedPattern: '^(?!0\.0\.0\.0/0$)([0-9]{1,3}\.){3}[0-9]{1,3}/32$'
+    ConstraintDescription: Supply the current browser/SIP client public IPv4 address as /32.
+  EnableSipUdp:
+    Type: String
+    Default: 'true'
+    AllowedValues:
+      - 'true'
+      - 'false'
+  EnableSipTcp:
+    Type: String
+    Default: 'false'
+    AllowedValues:
+      - 'true'
+      - 'false'
+  EnableHttp80:
+    Type: String
+    Default: 'false'
+    AllowedValues:
+      - 'true'
+      - 'false'
+  EnableTurn:
+    Type: String
+    Default: 'false'
+    AllowedValues:
+      - 'true'
+      - 'false'
+    Description: Explicitly opens only the small optional TURN demo ranges.
+  RtpPortMin:
+    Type: Number
+    Default: 30000
+    MinValue: 1024
+    MaxValue: 65535
+  RtpPortMax:
+    Type: Number
+    Default: 30039
+    MinValue: 1024
+    MaxValue: 65535
+  UseElasticIp:
+    Type: String
+    Default: 'true'
+    AllowedValues:
+      - 'true'
+      - 'false'
+  HostedZoneId:
+    Type: String
+    Default: ''
+    Description: Optional Route 53 public hosted zone ID. Supply with DomainName.
+  DomainName:
+    Type: String
+    Default: ''
+    AllowedPattern: '^$|^(?=.{1,253}$)([a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,63}$'
+    Description: Optional FQDN to create in HostedZoneId.
+  CloneRepoOnBoot:
+    Type: String
+    Default: 'false'
+    AllowedValues:
+      - 'true'
+      - 'false'
+  RepoUrl:
+    Type: String
+    Default: https://github.com/gary391/webrtc-to-sip-ec2.git
+    AllowedPattern: '^https://github\.com/[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+\.git$'
+
+Rules:
+  DnsParametersMustBePaired:
+    Assertions:
+      - Assert:
+          Fn::Or:
+            - Fn::And:
+                - Fn::Equals:
+                    - Ref: HostedZoneId
+                    - ''
+                - Fn::Equals:
+                    - Ref: DomainName
+                    - ''
+            - Fn::And:
+                - Fn::Not:
+                    - Fn::Equals:
+                        - Ref: HostedZoneId
+                        - ''
+                - Fn::Not:
+                    - Fn::Equals:
+                        - Ref: DomainName
+                        - ''
+        AssertDescription: HostedZoneId and DomainName must be supplied together.
+
+Conditions:
+  SipUdpEnabled: !Equals [!Ref EnableSipUdp, 'true']
+  SipTcpEnabled: !Equals [!Ref EnableSipTcp, 'true']
+  HttpEnabled: !Equals [!Ref EnableHttp80, 'true']
+  TurnEnabled: !Equals [!Ref EnableTurn, 'true']
+  ElasticIpEnabled: !Equals [!Ref UseElasticIp, 'true']
+  CloneRepoEnabled: !Equals [!Ref CloneRepoOnBoot, 'true']
+  DnsRecordEnabled: !And
+    - !Not [!Equals [!Ref HostedZoneId, '']]
+    - !Not [!Equals [!Ref DomainName, '']]
+  DomainNameProvided: !Not [!Equals [!Ref DomainName, '']]
+
+Resources:
+  Vpc:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: 10.0.0.0/16
+      EnableDnsHostnames: true
+      EnableDnsSupport: true
+      Tags:
+        - Key: Name
+          Value: !Sub '${ProjectName}-${EnvironmentName}-vpc'
+        - Key: Project
+          Value: !Ref ProjectName
+
+  InternetGateway:
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags:
+        - Key: Name
+          Value: !Sub '${ProjectName}-${EnvironmentName}-igw'
+
+  VpcGatewayAttachment:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      InternetGatewayId: !Ref InternetGateway
+      VpcId: !Ref Vpc
+
+  PublicSubnet:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref Vpc
+      CidrBlock: 10.0.1.0/24
+      MapPublicIpOnLaunch: true
+      Tags:
+        - Key: Name
+          Value: !Sub '${ProjectName}-${EnvironmentName}-public'
+
+  PublicRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref Vpc
+      Tags:
+        - Key: Name
+          Value: !Sub '${ProjectName}-${EnvironmentName}-public'
+
+  DefaultPublicRoute:
+    Type: AWS::EC2::Route
+    DependsOn: VpcGatewayAttachment
+    Properties:
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref InternetGateway
+      RouteTableId: !Ref PublicRouteTable
+
+  PublicSubnetRouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      SubnetId: !Ref PublicSubnet
+
+  InstanceSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Locked-down WebRTC-to-SIP demo ingress
+      VpcId: !Ref Vpc
+      SecurityGroupIngress:
+        - Description: SSH administration
+          IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: !Ref AdminCidr
+        - Description: HTTPS and WSS
+          IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          CidrIp: !Ref DemoClientCidr
+        - Description: RTPEngine media
+          IpProtocol: udp
+          FromPort: !Ref RtpPortMin
+          ToPort: !Ref RtpPortMax
+          CidrIp: !Ref DemoClientCidr
+        - !If
+          - SipUdpEnabled
+          - Description: SIP over UDP
+            IpProtocol: udp
+            FromPort: 5060
+            ToPort: 5060
+            CidrIp: !Ref DemoClientCidr
+          - !Ref AWS::NoValue
+        - !If
+          - SipTcpEnabled
+          - Description: SIP over TCP
+            IpProtocol: tcp
+            FromPort: 5060
+            ToPort: 5060
+            CidrIp: !Ref DemoClientCidr
+          - !Ref AWS::NoValue
+        - !If
+          - HttpEnabled
+          - Description: Optional restricted HTTP
+            IpProtocol: tcp
+            FromPort: 80
+            ToPort: 80
+            CidrIp: !Ref DemoClientCidr
+          - !Ref AWS::NoValue
+        - !If
+          - TurnEnabled
+          - Description: Optional TURN over UDP
+            IpProtocol: udp
+            FromPort: 3478
+            ToPort: 3478
+            CidrIp: !Ref DemoClientCidr
+          - !Ref AWS::NoValue
+        - !If
+          - TurnEnabled
+          - Description: Optional TURN over TCP
+            IpProtocol: tcp
+            FromPort: 3478
+            ToPort: 3478
+            CidrIp: !Ref DemoClientCidr
+          - !Ref AWS::NoValue
+        - !If
+          - TurnEnabled
+          - Description: Optional TURN relay media
+            IpProtocol: udp
+            FromPort: 31000
+            ToPort: 31039
+            CidrIp: !Ref DemoClientCidr
+          - !Ref AWS::NoValue
+      SecurityGroupEgress:
+        - Description: Required outbound package, signaling, and STUN access
+          IpProtocol: '-1'
+          CidrIp: 0.0.0.0/0
+      Tags:
+        - Key: Name
+          Value: !Sub '${ProjectName}-${EnvironmentName}-sg'
+
+  InstanceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - ec2.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
+      Tags:
+        - Key: Project
+          Value: !Ref ProjectName
+
+  InstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      Roles:
+        - !Ref InstanceRole
+
+  Instance:
+    Type: AWS::EC2::Instance
+    DependsOn:
+      - DefaultPublicRoute
+      - PublicSubnetRouteTableAssociation
+    Properties:
+      ImageId: !Ref DebianAmiSsmParameter
+      InstanceType: !Ref InstanceType
+      KeyName: !Ref KeyPairName
+      IamInstanceProfile: !Ref InstanceProfile
+      CreditSpecification:
+        CPUCredits: !Ref CpuCredits
+      MetadataOptions:
+        HttpEndpoint: enabled
+        HttpTokens: required
+        HttpPutResponseHopLimit: 1
+      NetworkInterfaces:
+        - AssociatePublicIpAddress: true
+          DeleteOnTermination: true
+          DeviceIndex: '0'
+          GroupSet:
+            - !Ref InstanceSecurityGroup
+          SubnetId: !Ref PublicSubnet
+      BlockDeviceMappings:
+        - DeviceName: /dev/xvda
+          Ebs:
+            DeleteOnTermination: true
+            Encrypted: true
+            VolumeSize: !Ref RootVolumeSizeGb
+            VolumeType: !Ref RootVolumeType
+      UserData:
+        Fn::Base64: !Sub |
+          #!/usr/bin/env bash
+          set -euxo pipefail
+          export DEBIAN_FRONTEND=noninteractive
+
+          apt-get update
+          apt-get install -y ca-certificates curl git jq make python3 tmux unzip vim
+
+          install -d -m 0755 /opt/webrtc-to-sip
+          cat > /opt/webrtc-to-sip/aws-instance.env <<'EOF'
+          AWS_REGION=${AWS::Region}
+          EC2_INSTANCE_ID=
+          PRIVATE_IPV4=
+          PUBLIC_IPV4=
+          EOF
+          chmod 0644 /opt/webrtc-to-sip/aws-instance.env
+
+          if [[ '${CloneRepoOnBoot}' == 'true' ]]; then
+            git clone --depth 1 '${RepoUrl}' /opt/webrtc-to-sip/source
+          fi
+
+          cat > /opt/webrtc-to-sip/NEXT_STEPS.txt <<'EOF'
+          1. Connect with the CloudFormation SshCommand output.
+          2. Clone or open the implementation repository on this instance.
+          3. Copy .env.example to .env and replace every placeholder secret.
+          4. Run sudo make detect-ec2-env, then merge the detected values into .env.
+          5. Configure a domain and certificate before starting Nginx.
+          6. Run make validate-env, then the native install/configure targets.
+          EOF
+
+          cat > /etc/motd <<'EOF'
+          WebRTC-to-SIP EC2 demo host
+          Next steps: /opt/webrtc-to-sip/NEXT_STEPS.txt
+          TURN is not installed or enabled by default.
+          EOF
+
+          chown -R admin:admin /opt/webrtc-to-sip
+      Tags:
+        - Key: Name
+          Value: !Sub '${ProjectName}-${EnvironmentName}'
+        - Key: Project
+          Value: !Ref ProjectName
+        - Key: Environment
+          Value: !Ref EnvironmentName
+
+  ElasticIp:
+    Type: AWS::EC2::EIP
+    Condition: ElasticIpEnabled
+    DependsOn: VpcGatewayAttachment
+    Properties:
+      Domain: vpc
+      InstanceId: !Ref Instance
+      Tags:
+        - Key: Name
+          Value: !Sub '${ProjectName}-${EnvironmentName}-eip'
+
+  DnsRecord:
+    Type: AWS::Route53::RecordSet
+    Condition: DnsRecordEnabled
+    Properties:
+      HostedZoneId: !Ref HostedZoneId
+      Name: !Ref DomainName
+      Type: A
+      TTL: '60'
+      ResourceRecords:
+        - !If
+          - ElasticIpEnabled
+          - !Ref ElasticIp
+          - !GetAtt Instance.PublicIp
+
+Outputs:
+  InstanceId:
+    Value: !Ref Instance
+  InstancePublicIp:
+    Value: !If [ElasticIpEnabled, !Ref ElasticIp, !GetAtt Instance.PublicIp]
+  InstancePrivateIp:
+    Value: !GetAtt Instance.PrivateIp
+  ElasticIpAllocationId:
+    Condition: ElasticIpEnabled
+    Value: !GetAtt ElasticIp.AllocationId
+  SecurityGroupId:
+    Value: !Ref InstanceSecurityGroup
+  VpcId:
+    Value: !Ref Vpc
+  SubnetId:
+    Value: !Ref PublicSubnet
+  PublicUrl:
+    Value: !If
+      - DomainNameProvided
+      - !Sub 'https://${DomainName}'
+      - !Sub
+        - 'https://${PublicIp}'
+        - PublicIp: !If [ElasticIpEnabled, !Ref ElasticIp, !GetAtt Instance.PublicIp]
+  SuggestedDomainRecord:
+    Value: !Sub
+      - '${Domain} A ${PublicIp}'
+      - Domain: !If [DomainNameProvided, !Ref DomainName, '<your-domain>']
+        PublicIp: !If [ElasticIpEnabled, !Ref ElasticIp, !GetAtt Instance.PublicIp]
+  SshCommand:
+    Value: !Sub
+      - 'ssh -i ~/.ssh/<your-key>.pem admin@${PublicIp}'
+      - PublicIp: !If [ElasticIpEnabled, !Ref ElasticIp, !GetAtt Instance.PublicIp]
+  VsCodeRemoteSshHostSnippet:
+    Value: !Sub
+      - |-
+        Host webrtc-to-sip-ec2
+          HostName ${PublicIp}
+          User admin
+          IdentityFile ~/.ssh/<your-key>.pem
+          IdentitiesOnly yes
+      - PublicIp: !If [ElasticIpEnabled, !Ref ElasticIp, !GetAtt Instance.PublicIp]
+  RepoPathOnInstance:
+    Value: !If [CloneRepoEnabled, /opt/webrtc-to-sip/source, /opt/webrtc-to-sip]
+  NextStepsPath:
+    Value: /opt/webrtc-to-sip/NEXT_STEPS.txt

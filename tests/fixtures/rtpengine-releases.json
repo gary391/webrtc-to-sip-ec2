@@ -1,0 +1,46 @@
+[
+  {
+    "tag_name": "mr13.5.1.15",
+    "draft": false,
+    "prerelease": false,
+    "published_at": "2026-05-27T13:02:00Z",
+    "assets": [
+      {
+        "name": "rtpengine-daemon_13.5.1.15+0~mr13.5.1.15+gh+trixie_amd64.deb",
+        "browser_download_url": "https://github.com/sipwise/rtpengine/releases/download/mr13.5.1.15/old.deb",
+        "digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+      }
+    ]
+  },
+  {
+    "tag_name": "mr26.0.1.13",
+    "draft": false,
+    "prerelease": false,
+    "published_at": "2026-05-27T16:29:00Z",
+    "assets": [
+      {
+        "name": "rtpengine-daemon_26.0.1.13+0~mr26.0.1.13+gh+trixie_amd64.deb",
+        "browser_download_url": "https://github.com/sipwise/rtpengine/releases/download/mr26.0.1.13/mr26.deb",
+        "digest": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+      }
+    ]
+  },
+  {
+    "tag_name": "mr13.5.1.16",
+    "draft": false,
+    "prerelease": false,
+    "published_at": "2026-05-27T16:28:31Z",
+    "assets": [
+      {
+        "name": "rtpengine-daemon-dbgsym_13.5.1.16+0~mr13.5.1.16+gh+trixie_amd64.deb",
+        "browser_download_url": "https://github.com/sipwise/rtpengine/releases/download/mr13.5.1.16/debug.deb",
+        "digest": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"
+      },
+      {
+        "name": "rtpengine-daemon_13.5.1.16+0~mr13.5.1.16+gh+trixie_amd64.deb",
+        "browser_download_url": "https://github.com/sipwise/rtpengine/releases/download/mr13.5.1.16/current.deb",
+        "digest": "sha256:d85719f9271b66970d82c0839a9614597bad485a1320e881b9a400586258901d"
+      }
+    ]
+  }
+]

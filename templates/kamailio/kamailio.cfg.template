@@ -1,0 +1,207 @@
+#!KAMAILIO
+
+#!define FLT_NAT 5
+#!define FLB_NAT 6
+#!define FLB_FROM_WEBRTC 7
+#!define FLB_TO_WEBRTC 8
+
+debug=2
+log_stderror=no
+log_facility=LOG_LOCAL0
+fork=yes
+children=4
+tcp_connection_lifetime=3605
+tcp_accept_no_cl=yes
+tcp_rd_buf_size=16384
+
+alias="{{DOMAIN}}"
+listen=udp:{{PRIVATE_IPV4}}:{{KAMAILIO_SIP_PORT}}
+listen=tcp:{{PRIVATE_IPV4}}:{{KAMAILIO_SIP_PORT}}
+listen=tcp:127.0.0.1:{{KAMAILIO_WS_INTERNAL_PORT}}
+
+loadmodule "db_mysql.so"
+loadmodule "kex.so"
+loadmodule "corex.so"
+loadmodule "tm.so"
+loadmodule "tmx.so"
+loadmodule "sl.so"
+loadmodule "rr.so"
+loadmodule "pv.so"
+loadmodule "maxfwd.so"
+loadmodule "textops.so"
+loadmodule "textopsx.so"
+loadmodule "siputils.so"
+loadmodule "xlog.so"
+loadmodule "sanity.so"
+loadmodule "ctl.so"
+loadmodule "cfg_rpc.so"
+loadmodule "auth.so"
+loadmodule "auth_db.so"
+loadmodule "usrloc.so"
+loadmodule "registrar.so"
+loadmodule "nathelper.so"
+loadmodule "xhttp.so"
+loadmodule "websocket.so"
+loadmodule "rtpengine.so"
+
+modparam("rr", "enable_full_lr", 1)
+modparam("rr", "append_fromtag", 0)
+modparam("auth_db", "db_url", "mysql://{{DB_KAMAILIO_USER}}:{{DB_KAMAILIO_PASSWORD}}@127.0.0.1/{{DB_KAMAILIO_NAME}}")
+modparam("auth_db", "calculate_ha1", 1)
+modparam("auth_db", "password_column", "password")
+modparam("auth_db", "load_credentials", "")
+modparam("usrloc", "db_url", "mysql://{{DB_KAMAILIO_USER}}:{{DB_KAMAILIO_PASSWORD}}@127.0.0.1/{{DB_KAMAILIO_NAME}}")
+modparam("usrloc", "db_mode", 2)
+modparam("usrloc", "nat_bflag", FLB_NAT)
+modparam("registrar", "method_filtering", 1)
+modparam("registrar", "max_expires", 3600)
+modparam("nathelper|registrar", "received_avp", "$avp(RECEIVED)")
+modparam("rtpengine", "rtpengine_sock", "udp:{{RTPENGINE_CONTROL_IP}}:{{RTPENGINE_CONTROL_PORT}}")
+
+request_route {
+    route(REQINIT);
+    xlog("L_INFO", "request $rm from $fu via $proto $si:$sp to $ru\n");
+
+    if ($proto =~ "ws") {
+        force_rport();
+        if (is_method("REGISTER")) {
+            fix_nated_register();
+        } else if (!add_contact_alias()) {
+            send_reply("400", "Bad Contact");
+            exit;
+        }
+        setflag(FLT_NAT);
+        setbflag(FLB_FROM_WEBRTC);
+    }
+
+    if (is_method("CANCEL")) {
+        if (t_check_trans()) route(RELAY);
+        exit;
+    }
+
+    route(WITHINDLG);
+    t_check_trans();
+    route(AUTH);
+
+    remove_hf("Route");
+    if (is_method("INVITE")) record_route();
+
+    if (!uri == myself) {
+        send_reply("403", "Not relaying");
+        exit;
+    }
+
+    if (is_method("REGISTER")) {
+        if (isflagset(FLT_NAT)) setbflag(FLB_NAT);
+        if (!save("location")) sl_reply_error();
+        exit;
+    }
+
+    if ($rU == $null) {
+        send_reply("484", "Address Incomplete");
+        exit;
+    }
+
+    if (!lookup("location")) {
+        send_reply("404", "Not Found");
+        exit;
+    }
+
+    if ($du =~ "transport=ws" || $ru =~ "transport=ws") setbflag(FLB_TO_WEBRTC);
+
+    if (is_method("INVITE") && has_body("application/sdp")) {
+        route(MEDIA_OFFER);
+        t_on_reply("MEDIA_REPLY");
+        t_on_failure("MEDIA_FAILURE");
+    }
+
+    route(RELAY);
+}
+
+route[REQINIT] {
+    if (!mf_process_maxfwd_header("10")) {
+        send_reply("483", "Too Many Hops");
+        exit;
+    }
+    if (!sanity_check("1511", "7")) {
+        send_reply("400", "Malformed SIP Request");
+        exit;
+    }
+}
+
+route[AUTH] {
+    if (is_method("REGISTER") || from_uri == myself) {
+        if (!auth_check("$fd", "subscriber", "1")) {
+            auth_challenge("$fd", "0");
+            exit;
+        }
+        if (!is_method("REGISTER")) consume_credentials();
+    }
+    if (from_uri != myself && uri != myself) {
+        send_reply("403", "Not relaying");
+        exit;
+    }
+}
+
+route[WITHINDLG] {
+    if (!has_totag()) return;
+
+    if (loose_route()) {
+        if ($du == "" && !handle_ruri_alias()) {
+            send_reply("400", "Bad Route Alias");
+            exit;
+        }
+        if (is_method("BYE")) rtpengine_delete();
+        if (has_body("application/sdp")) route(MEDIA_IN_DIALOG);
+        route(RELAY);
+    }
+
+    if (is_method("ACK") && t_check_trans()) route(RELAY);
+    send_reply("404", "Not Here");
+    exit;
+}
+
+route[MEDIA_OFFER] {
+    if ($proto =~ "ws") {
+        rtpengine_offer("replace-origin replace-session-connection rtcp-mux-demux DTLS=off SDES-off ICE=remove RTP/AVP");
+    } else if (isbflagset(FLB_TO_WEBRTC)) {
+        rtpengine_offer("replace-origin replace-session-connection rtcp-mux-offer generate-mid DTLS=passive SDES-off ICE=force RTP/SAVPF");
+    } else {
+        rtpengine_offer("replace-origin replace-session-connection");
+    }
+}
+
+route[MEDIA_IN_DIALOG] {
+    rtpengine_manage("replace-origin replace-session-connection");
+}
+
+route[RELAY] {
+    if (!t_relay()) sl_reply_error();
+    exit;
+}
+
+onreply_route[MEDIA_REPLY] {
+    if (!has_body("application/sdp")) return;
+    if (isbflagset(FLB_FROM_WEBRTC)) {
+        rtpengine_answer("replace-origin replace-session-connection rtcp-mux-offer generate-mid DTLS=passive SDES-off ICE=force RTP/SAVPF");
+    } else if (isbflagset(FLB_TO_WEBRTC)) {
+        rtpengine_answer("replace-origin replace-session-connection rtcp-mux-demux DTLS=off SDES-off ICE=remove RTP/AVP");
+    } else {
+        rtpengine_answer("replace-origin replace-session-connection");
+    }
+}
+
+failure_route[MEDIA_FAILURE] {
+    rtpengine_delete();
+}
+
+event_route[xhttp:request] {
+    if ($rm == "GET" && $hdr(Upgrade) =~ "websocket") {
+        if (ws_handle_handshake()) exit;
+    }
+    xhttp_reply("404", "Not Found", "text/plain", "Not Found\n");
+}
+
+event_route[websocket:closed] {
+    xlog("L_INFO", "WebSocket closed from $si:$sp\n");
+}
