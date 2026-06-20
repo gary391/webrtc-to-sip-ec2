@@ -7,11 +7,13 @@ Instance ID: i-070fe5055535eead6
 Observed public IPv4: 44.228.97.60
 Private IPv4: 10.0.1.36
 Operating system: Debian 13 Trixie, amd64
-Validated repository commit: f6514ed
+Validated repository commit: f2539ea
 Kamailio: 6.1.3
 RTPEngine: 13.5.1.16
 MariaDB: 11.8.6
-Packaged Certbot: 4.0.0
+IP-capable Certbot: 5.6.0 (isolated under /opt/certbot-ip)
+Certificate SAN: IP Address 44.228.97.60
+Certificate expiry: 2026-06-27
 ```
 
 ## Verified
@@ -25,12 +27,16 @@ Packaged Certbot: 4.0.0
 - RTPEngine control listens only on `127.0.0.1:22222`.
 - Kamailio listens on the private address for SIP and loopback for WebSocket.
 - MariaDB, RTPEngine, and Kamailio are active and pass the default-mode health check.
-- Nginx and coturn are inactive as expected at this checkpoint.
+- A staging and production short-lived IP certificate were issued with HTTP-01.
+- Nginx is active with trusted HTTPS and the WSS proxy configuration.
+- The expanded on-instance health check passes, including HTTPS on TCP 443.
+- External HTTPS returns HTTP 200 with the expected security headers.
+- Coturn is inactive as expected in the default STUN-first mode.
 
 ## Remaining
 
 - Confirm the observed public address is a CloudFormation-managed Elastic IP.
-- Install Certbot 5.4 or newer for short-lived IP-address certificate support.
-- Temporarily allow public TCP port 80, issue and test the certificate, then remove the rule.
-- Enable Nginx, HTTPS, and WSS and rerun the expanded health check.
+- Remove the temporary public TCP port 80 security-group rule.
+- Reopen port 80 near certificate expiry for manual renewal unless validation
+  access is deliberately automated.
 - Resolve the browser-client distribution task and validate two-way audio.

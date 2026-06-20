@@ -15,6 +15,12 @@ python3 -m venv "$VENV_DIR"
   --upgrade 'certbot>=5.4,<6'
 ln -sfn "$VENV_DIR/bin/certbot" "$LINK_PATH"
 
+# Debian's packaged timer invokes /usr/bin/certbot, which is too old to renew
+# this IP-address lineage. Renewal also needs a deliberate port-80 window.
+if systemctl list-unit-files certbot.timer >/dev/null 2>&1; then
+  systemctl disable --now certbot.timer >/dev/null 2>&1 || true
+fi
+
 version=$($LINK_PATH --version | awk '{print $2}')
 dpkg --compare-versions "$version" ge 5.4 || {
   printf 'ERROR: Certbot 5.4 or newer is required; installed %s.\n' "$version" >&2

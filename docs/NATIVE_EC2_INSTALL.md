@@ -103,3 +103,11 @@ Production certificates are written below `/etc/letsencrypt/live/<public-ip>/`.
 IP certificates are short-lived. Closing port 80 after issuance means renewal
 also requires temporarily reopening it. Do not enable automatic renewal until
 security-group access for the validation window is deliberately automated.
+The installer disables Debian's packaged `certbot.timer` because it invokes the
+older `/usr/bin/certbot`, not the isolated IP-capable client. For this demo,
+reopen port 80 near expiry and run:
+
+```bash
+sudo ACME_STAGING=false make issue-ip-certificate
+sudo systemctl reload nginx
+```

@@ -28,6 +28,7 @@ grep -Fq 'coturn is inactive in the default mode' "$ROOT_DIR/deploy/debug/health
 grep -Fq 'nginx:$ENABLE_NGINX' "$ROOT_DIR/deploy/native/status.sh"
 grep -Fq 'if [[ $ENABLE_NGINX == true ]]; then' "$ROOT_DIR/deploy/debug/healthcheck.sh"
 grep -Fq "'certbot>=5.4,<6'" "$ROOT_DIR/deploy/native/install-certbot-ip.sh"
+grep -Fq 'systemctl disable --now certbot.timer' "$ROOT_DIR/deploy/native/install-certbot-ip.sh"
 grep -Fq -- '--preferred-profile shortlived' "$ROOT_DIR/deploy/native/issue-ip-certificate.sh"
 grep -Fq -- '--ip-address "$PUBLIC_IPV4"' "$ROOT_DIR/deploy/native/issue-ip-certificate.sh"
 
