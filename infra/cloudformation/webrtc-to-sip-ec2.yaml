@@ -411,7 +411,9 @@ Resources:
           2. Clone or open the implementation repository on this instance.
           3. Copy .env.example to .env and replace every placeholder secret.
           4. Run sudo make detect-ec2-env, then merge the detected values into .env.
-          5. Configure a domain and certificate before starting Nginx.
+          5. Configure a trusted certificate before starting Nginx. A domain with
+             DNS-01 is preferred; a short-lived IP certificate requires an EIP,
+             current ACME tooling, automated renewal, and temporary validation access.
           6. Run make validate-env, then the native install/configure targets.
           EOF
 

@@ -1,8 +1,13 @@
 # Troubleshooting
 
 - **SSH or HTTPS blocked:** re-check the workstation public IP and stack CIDRs.
-- **Certificate issuance fails:** locked port 80 prevents HTTP-01; use DNS-01 or
-  a deliberate temporary restricted HTTP rule.
+- **Certificate issuance fails:** locked port 80 prevents HTTP-01. Prefer DNS-01
+  with a domain, or deliberately allow public ACME validation only for the
+  issuance window. Restricting HTTP to `DemoClientCidr` does not allow the CA's
+  validation systems to reach the challenge.
+- **IP certificate cannot be requested:** confirm the Elastic IP is attached and
+  the ACME client supports short-lived IP-address certificates. Certbot's
+  documented webroot support requires version 5.4 or newer.
 - **WebSocket fails:** run `nginx -t`, inspect `/ws`, and check Kamailio port 8080.
 - **Registration fails:** inspect the domain, subscriber record, password, and
   Kamailio authentication logs.

@@ -31,13 +31,15 @@ media from a different address. The operator must update `DemoClientCidr` to a
 known peer CIDR rather than broadly opening the range. This is a demo constraint,
 not a generally deployable SIP topology.
 
-### 4. TLS bootstrap is not fully defined
+### 4. TLS bootstrap requires an explicit deployment choice
 
 HTTPS/WSS is required, while port 80 is off and the spec permits several
-certificate methods without selecting one. Native configuration cannot be fully
-automatic until a domain and certificate source are selected. The stack creates
-DNS only when both hosted-zone and domain parameters are supplied; certificate
-issuance remains an explicit deployment task.
+certificate methods without selecting one. Let's Encrypt now supports
+short-lived IP-address certificates, so a domain is not mandatory, but that path
+requires a stable Elastic IP, a current ACME client, automated renewal, and
+temporary public validation reachability. DNS-01 with a domain remains the
+simpler locked-down path. The stack creates DNS only when both hosted-zone and
+domain parameters are supplied; certificate issuance remains an explicit task.
 
 ### 5. The upstream configuration is a reference, not a safe install source
 

@@ -19,10 +19,10 @@ Status values: `TODO`, `IN PROGRESS`, `BLOCKED`, `DONE`.
 | WTS-013 | IN PROGRESS | Add service lifecycle and status scripts | Configure/start/stop/restart/status targets are repeatable | WTS-008, WTS-009, WTS-010, WTS-011 |
 | WTS-014 | IN PROGRESS | Add health checks and capture tooling | Signaling, listeners, RTP range, and relevant journals are collected | WTS-013 |
 | WTS-015 | DONE | Write deployment, security, cost, validation, troubleshooting, and cleanup docs | All documents required by the spec exist and agree with implementation | WTS-003, WTS-014 |
-| WTS-016 | BLOCKED | Run an AWS deployment smoke test | Stack reaches `CREATE_COMPLETE` in a selected region | AWS account, key pair, domain/certificate inputs |
+| WTS-016 | IN PROGRESS | Run an AWS deployment smoke test | Stack reaches `CREATE_COMPLETE` in `us-west-2` using `kamailio-course` and locked-down `/32` ingress | WTS-019 |
 | WTS-017 | BLOCKED | Validate the end-to-end two-way audio demo | Browser registration, SIP call, media, and teardown satisfy acceptance criteria | WTS-016 and a SIP test client |
 | WTS-018 | DONE | Prepare the GitHub-based development workflow | Standalone private Git repository, green CI, iteration runbook, and implementation `RepoUrl` are ready | WTS-003 |
-| WTS-019 | IN PROGRESS | Complete infrastructure deployment preflight | Local tests, `cfn-lint`, GitHub CI, CIDRs, key pair, and AWS parameters are confirmed | WTS-018 |
+| WTS-019 | DONE | Complete infrastructure deployment preflight | Local tests, `cfn-lint`, GitHub CI, CIDRs, key pair, and AWS parameters are confirmed | WTS-018 |
 | WTS-020 | TODO | Resolve browser-client distribution approach | Client is legally redistributable or fetched from an explicitly approved source | WTS-001 |
 
 ## Tracking rule

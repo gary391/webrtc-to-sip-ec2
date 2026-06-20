@@ -13,8 +13,40 @@ commit has green GitHub CI.
    ```
 
 3. Append `/32` and use it for both `AdminCidr` and `DemoClientCidr`.
-4. Decide whether to use an Elastic IP. The default is `true` for stable DNS.
-5. Decide how TLS will be provisioned. DNS-01 is preferred when Route 53 is available.
+4. Decide whether to use an Elastic IP. Keep the default `true` when DNS is
+   deferred or when an IP-address certificate may be used.
+5. Decide how TLS will be provisioned. A domain is not required to create the
+   stack, but the browser demo requires a trusted HTTPS origin for microphone
+   access. DNS-01 remains the preferred locked-down option.
+
+Let's Encrypt can issue short-lived IP-address certificates, so a domain is no
+longer an absolute requirement for the demo. These certificates are valid for
+about six days and require Certbot 5.4 or newer for the documented webroot flow.
+They also require temporary public ACME validation reachability. Use a stable
+Elastic IP, automate renewal, and close the temporary validation rule after
+issuance. A domain with DNS-01 is operationally simpler and does not require
+opening HTTP validation access.
+
+## Confirmed first-deployment inputs
+
+```text
+AWS region: us-west-2
+KeyPairName: kamailio-course
+AdminCidr: 24.18.193.148/32
+DemoClientCidr: 24.18.193.148/32
+UseElasticIp: true
+HostedZoneId: <blank>
+DomainName: <blank>
+CloneRepoOnBoot: false
+EnableSipUdp: true
+EnableSipTcp: false
+EnableHttp: false
+EnableTurn: false
+```
+
+The CIDRs represent the workstation's current public address. If the ISP changes
+it, update both parameters before reconnecting; CloudFormation will update the
+security group without replacing the instance.
 
 ## Create the stack
 
