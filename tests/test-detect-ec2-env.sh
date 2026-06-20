@@ -37,7 +37,12 @@ grep -Fxq 'AWS_REGION=us-west-2' "$TMP_DIR/aws-instance.env"
 grep -Fxq 'EC2_INSTANCE_ID=i-0123456789abcdef0' "$TMP_DIR/aws-instance.env"
 grep -Fxq 'PRIVATE_IPV4=10.0.1.25' "$TMP_DIR/aws-instance.env"
 grep -Fxq 'PUBLIC_IPV4=203.0.113.10' "$TMP_DIR/aws-instance.env"
-[[ $(stat -f '%Lp' "$TMP_DIR/aws-instance.env" 2>/dev/null || stat -c '%a' "$TMP_DIR/aws-instance.env") == 644 ]]
+if stat --version >/dev/null 2>&1; then
+  output_mode=$(stat -c '%a' "$TMP_DIR/aws-instance.env")
+else
+  output_mode=$(stat -f '%Lp' "$TMP_DIR/aws-instance.env")
+fi
+[[ $output_mode == 644 ]]
 [[ $(wc -l < "$FAKE_CURL_LOG") -eq 3 ]]
 
 cat > "$TMP_DIR/failing-curl" <<'SH'

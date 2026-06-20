@@ -34,7 +34,12 @@ for expected in \
   }
 done
 
-[[ $(stat -f '%Lp' "$TMP_DIR/kamailio.cfg" 2>/dev/null || stat -c '%a' "$TMP_DIR/kamailio.cfg") == 600 ]]
+if stat --version >/dev/null 2>&1; then
+  output_mode=$(stat -c '%a' "$TMP_DIR/kamailio.cfg")
+else
+  output_mode=$(stat -f '%Lp' "$TMP_DIR/kamailio.cfg")
+fi
+[[ $output_mode == 600 ]]
 if grep -Eq '{{[A-Z][A-Z0-9_]*}}' "$TMP_DIR/kamailio.cfg"; then
   printf 'Kamailio configuration contains unresolved placeholders\n' >&2
   exit 1
