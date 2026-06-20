@@ -4,7 +4,14 @@ set -euo pipefail
 ROOT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
 TEMPLATE=$ROOT_DIR/infra/cloudformation/webrtc-to-sip-ec2.yaml
 
-ruby -rpsych -e 'Psych.parse_file(ARGV.fetch(0))' "$TEMPLATE"
+if python3 -c 'import yaml' >/dev/null 2>&1; then
+  python3 -c 'import sys, yaml; yaml.compose(open(sys.argv[1], encoding="utf-8"))' "$TEMPLATE"
+elif command -v ruby >/dev/null 2>&1; then
+  ruby -rpsych -e 'Psych.parse_file(ARGV.fetch(0))' "$TEMPLATE"
+else
+  printf 'Install python3-yaml or Ruby to validate CloudFormation YAML\n' >&2
+  exit 1
+fi
 
 if sed -n '/SecurityGroupIngress:/,/SecurityGroupEgress:/p' "$TEMPLATE" |
   grep -Fq 'CidrIp: 0.0.0.0/0'; then

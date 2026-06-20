@@ -391,7 +391,7 @@ Resources:
           export DEBIAN_FRONTEND=noninteractive
 
           apt-get update
-          apt-get install -y ca-certificates curl git jq make python3 tmux unzip vim
+          apt-get install -y ca-certificates curl git jq make python3 python3-yaml tmux unzip vim
 
           install -d -m 0755 /opt/webrtc-to-sip
           cat > /opt/webrtc-to-sip/aws-instance.env <<'EOF'

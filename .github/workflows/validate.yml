@@ -25,8 +25,8 @@ jobs:
       - name: Install validation tools
         run: |
           sudo apt-get update
-          sudo apt-get install -y jq ruby
-          python -m pip install --disable-pip-version-check 'cfn-lint<2'
+          sudo apt-get install -y jq
+          python -m pip install --disable-pip-version-check 'cfn-lint<2' PyYAML
 
       - name: Run project tests
         run: make test
