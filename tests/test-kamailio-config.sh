@@ -39,7 +39,7 @@ if stat --version >/dev/null 2>&1; then
 else
   output_mode=$(stat -f '%Lp' "$TMP_DIR/kamailio.cfg")
 fi
-[[ $output_mode == 600 ]]
+[[ $output_mode == 640 ]]
 if grep -Eq '{{[A-Z][A-Z0-9_]*}}' "$TMP_DIR/kamailio.cfg"; then
   printf 'Kamailio configuration contains unresolved placeholders\n' >&2
   exit 1

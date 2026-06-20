@@ -17,11 +17,15 @@ set -a
 source "$ENV_FILE"
 set +a
 
-OUTPUT_MODE=0600 "$ROOT_DIR/deploy/common/render-template.sh" \
+OUTPUT_MODE=0640 "$ROOT_DIR/deploy/common/render-template.sh" \
   "$TEMPLATE_FILE" "$OUTPUT_FILE" \
   DOMAIN PRIVATE_IPV4 KAMAILIO_SIP_PORT KAMAILIO_WS_INTERNAL_PORT \
   DB_KAMAILIO_USER DB_KAMAILIO_PASSWORD DB_KAMAILIO_NAME \
   RTPENGINE_CONTROL_IP RTPENGINE_CONTROL_PORT
+
+if [[ $EUID -eq 0 ]]; then
+  chown root:kamailio "$OUTPUT_FILE"
+fi
 
 if command -v kamailio >/dev/null 2>&1; then
   kamailio -c -f "$OUTPUT_FILE"
