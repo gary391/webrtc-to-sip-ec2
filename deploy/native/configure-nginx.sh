@@ -6,6 +6,8 @@ ENV_FILE=${ENV_FILE:-$ROOT_DIR/.env}
 TEMPLATE_FILE=${TEMPLATE_FILE:-$ROOT_DIR/templates/nginx/webrtc-to-sip.conf.template}
 OUTPUT_FILE=${OUTPUT_FILE:-/etc/nginx/sites-available/webrtc-to-sip.conf}
 ENABLED_FILE=${ENABLED_FILE:-/etc/nginx/sites-enabled/webrtc-to-sip.conf}
+SYSTEMD_DROP_IN_SOURCE=${SYSTEMD_DROP_IN_SOURCE:-$ROOT_DIR/templates/systemd/nginx.service.d/kamailio.conf}
+SYSTEMD_DROP_IN_FILE=${SYSTEMD_DROP_IN_FILE:-/etc/systemd/system/nginx.service.d/kamailio.conf}
 
 if [[ ${ALLOW_NON_ROOT:-false} != true && $EUID -ne 0 ]]; then
   printf 'ERROR: Nginx configuration must run as root.\n' >&2
@@ -52,6 +54,8 @@ if command -v nginx >/dev/null 2>&1 && [[ ${SKIP_NGINX_TEST:-false} != true ]]; 
   nginx -t
 fi
 if [[ ${SKIP_SYSTEMD:-false} != true ]]; then
+  install -D -m 0644 "$SYSTEMD_DROP_IN_SOURCE" "$SYSTEMD_DROP_IN_FILE"
+  systemctl daemon-reload
   systemctl disable --now nginx >/dev/null 2>&1 || true
 fi
 
