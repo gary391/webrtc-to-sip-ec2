@@ -45,6 +45,8 @@ grep -Fq 'wss://sip.example.com/ws' "$TMP_DIR/www/config.js"
 grep -Fq 'new JsSIP.WebSocketInterface' "$TMP_DIR/www/app.js"
 grep -Fq 'navigator.mediaDevices.getUserMedia' "$TMP_DIR/www/app.js"
 grep -Fq "Microphone blocked. Allow microphone access" "$TMP_DIR/www/app.js"
+grep -Fq "elements.hangup.addEventListener('click', terminateActiveSession)" "$TMP_DIR/www/app.js"
+grep -Fq "appendLog('Ending call')" "$TMP_DIR/www/app.js"
 if grep -Eq 'TLSv1(\.0|\.1)?[ ;]' "$TMP_DIR/nginx.conf"; then
   printf 'Nginx configuration enables obsolete TLS\n' >&2
   exit 1

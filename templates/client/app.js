@@ -23,6 +23,7 @@
   let userAgent = null;
   let activeSession = null;
   let localMediaStream = null;
+  let teardownTimer = null;
 
   elements.user.value = config.defaultSipUser;
   elements.target.value = config.defaultPeerUser;
@@ -53,6 +54,10 @@
   }
 
   function setSession(session, incoming = false) {
+    if (!session && teardownTimer) {
+      window.clearTimeout(teardownTimer);
+      teardownTimer = null;
+    }
     activeSession = session;
     const active = Boolean(session);
     elements.call.disabled = !userAgent?.isRegistered() || active;
@@ -94,6 +99,36 @@
     };
     session.on('ended', finish);
     session.on('failed', finish);
+  }
+
+  function terminateActiveSession() {
+    const session = activeSession;
+    if (!session) {
+      appendLog('No active call to hang up');
+      setSession(null);
+      return;
+    }
+
+    elements.hangup.disabled = true;
+    elements.answer.disabled = true;
+    elements.reject.disabled = true;
+    setStatus(elements.callStatus, 'Ending', 'pending');
+    appendLog('Ending call');
+
+    teardownTimer = window.setTimeout(() => {
+      teardownTimer = null;
+      if (activeSession !== session) return;
+      appendLog('Call ended locally after teardown timeout');
+      setSession(null);
+    }, 5000);
+
+    try {
+      session.terminate();
+    } catch (error) {
+      appendLog(`Hang up failed: ${error?.message || 'unknown error'}`);
+      if (activeSession === session) setSession(null);
+      return;
+    }
   }
 
   function mediaErrorMessage(error) {
@@ -210,6 +245,6 @@
     }
   });
   elements.reject.addEventListener('click', () => activeSession?.terminate({ status_code: 486 }));
-  elements.hangup.addEventListener('click', () => activeSession?.terminate());
+  elements.hangup.addEventListener('click', terminateActiveSession);
   elements.clearLog.addEventListener('click', () => elements.log.replaceChildren());
 })();
