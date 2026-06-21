@@ -7,6 +7,7 @@ trap 'rm -rf "$TMP_DIR"' EXIT
 
 sed \
   -e 's/SIP_PASSWORD=change-me/SIP_PASSWORD=sip-secret-123456/' \
+  -e 's/SIP_PEER_PASSWORD=change-me/SIP_PEER_PASSWORD=peer-secret-123456/' \
   -e 's/DB_ROOT_PASSWORD=change-me/DB_ROOT_PASSWORD=root-secret-123456/' \
   -e 's/DB_KAMAILIO_PASSWORD=change-me/DB_KAMAILIO_PASSWORD=db-secret-12345678/' \
   -e 's/TURN_PASSWORD=change-me/TURN_PASSWORD=turn-secret-123456/' \

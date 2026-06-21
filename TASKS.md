@@ -20,10 +20,10 @@ Status values: `TODO`, `IN PROGRESS`, `BLOCKED`, `DONE`.
 | WTS-014 | DONE | Add health checks and capture tooling | EC2 health checks pass for services, HTTPS, SIP/control listeners, and database binding constraints | WTS-013 |
 | WTS-015 | DONE | Write deployment, security, cost, validation, troubleshooting, and cleanup docs | All documents required by the spec exist and agree with implementation | WTS-003, WTS-014 |
 | WTS-016 | DONE | Run an AWS deployment smoke test | Stack reached `CREATE_COMPLETE` in `us-west-2`; SSH, IMDSv2, private GitHub checkout, package installation, and core services were validated | WTS-019 |
-| WTS-017 | BLOCKED | Validate the end-to-end two-way audio demo | Browser registration, SIP call, media, and teardown satisfy acceptance criteria | WTS-016 and a SIP test client |
+| WTS-017 | IN PROGRESS | Validate the end-to-end two-way audio demo | Browser registration, SIP call, media, and teardown satisfy acceptance criteria | WTS-016 and a SIP test client |
 | WTS-018 | DONE | Prepare the GitHub-based development workflow | Standalone private Git repository, green CI, iteration runbook, and implementation `RepoUrl` are ready | WTS-003 |
 | WTS-019 | DONE | Complete infrastructure deployment preflight | Local tests, `cfn-lint`, GitHub CI, CIDRs, key pair, and AWS parameters are confirmed | WTS-018 |
-| WTS-020 | TODO | Resolve browser-client distribution approach | Client is legally redistributable or fetched from an explicitly approved source | WTS-001 |
+| WTS-020 | DONE | Resolve browser-client distribution approach | Pinned JsSIP 3.13.8 browser bundle is vendored with npm integrity metadata, reproducible build command, and MIT license | WTS-001 |
 
 ## Tracking rule
 

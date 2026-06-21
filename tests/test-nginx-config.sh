@@ -7,6 +7,7 @@ trap 'rm -rf "$TMP_DIR"' EXIT
 
 sed \
   -e 's/SIP_PASSWORD=change-me/SIP_PASSWORD=sip-secret-123456/' \
+  -e 's/SIP_PEER_PASSWORD=change-me/SIP_PEER_PASSWORD=peer-secret-123456/' \
   -e 's/DB_ROOT_PASSWORD=change-me/DB_ROOT_PASSWORD=root-secret-123456/' \
   -e 's/DB_KAMAILIO_PASSWORD=change-me/DB_KAMAILIO_PASSWORD=db-secret-12345678/' \
   -e 's/TURN_PASSWORD=change-me/TURN_PASSWORD=turn-secret-123456/' \
@@ -34,7 +35,13 @@ for expected in \
 done
 
 [[ -f $TMP_DIR/www/index.html ]]
+[[ -f $TMP_DIR/www/app.js ]]
+[[ -f $TMP_DIR/www/styles.css ]]
+[[ -f $TMP_DIR/www/vendor/jssip-3.13.8.min.js ]]
+[[ -f $TMP_DIR/www/vendor/JSSIP-LICENSE.md ]]
 grep -Fq 'stun:stun.l.google.com:19302' "$TMP_DIR/www/config.js"
+grep -Fq 'wss://sip.example.com/ws' "$TMP_DIR/www/config.js"
+grep -Fq 'new JsSIP.WebSocketInterface' "$TMP_DIR/www/app.js"
 if grep -Eq 'TLSv1(\.0|\.1)?[ ;]' "$TMP_DIR/nginx.conf"; then
   printf 'Nginx configuration enables obsolete TLS\n' >&2
   exit 1

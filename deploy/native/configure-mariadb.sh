@@ -79,6 +79,17 @@ for table in version subscriber location location_attrs; do
   }
 done
 
+"${root_cli[@]}" "$DB_KAMAILIO_NAME" <<SQL
+INSERT INTO subscriber (username, domain, password, ha1, ha1b)
+VALUES
+  ('${SIP_USER}', '${DOMAIN}', '${SIP_PASSWORD}', '', ''),
+  ('${SIP_PEER_USER}', '${DOMAIN}', '${SIP_PEER_PASSWORD}', '', '')
+ON DUPLICATE KEY UPDATE
+  password = VALUES(password),
+  ha1 = '',
+  ha1b = '';
+SQL
+
 "${root_cli[@]}" <<SQL
 ALTER USER 'root'@'localhost' IDENTIFIED BY '${DB_ROOT_PASSWORD}';
 FLUSH PRIVILEGES;

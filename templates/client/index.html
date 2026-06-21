@@ -3,12 +3,59 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>WebRTC-to-SIP deployment</title>
+  <title>WebRTC SIP Demo</title>
+  <link rel="stylesheet" href="/styles.css">
+  <script defer src="/vendor/jssip-3.13.8.min.js"></script>
+  <script defer src="/config.js"></script>
+  <script defer src="/app.js"></script>
 </head>
 <body>
-  <main>
-    <h1>WebRTC-to-SIP deployment</h1>
-    <p>The HTTPS and WSS endpoint is ready for an approved WebRTC SIP client.</p>
+  <main class="shell">
+    <header>
+      <p class="eyebrow">Kamailio + RTPEngine</p>
+      <h1>WebRTC SIP Demo</h1>
+      <p>Register the browser, then call the SIP softphone account.</p>
+    </header>
+
+    <section class="card" aria-labelledby="account-heading">
+      <div class="section-heading">
+        <h2 id="account-heading">Browser account</h2>
+        <span id="registration-status" class="status idle">Offline</span>
+      </div>
+      <label for="sip-user">SIP user</label>
+      <input id="sip-user" autocomplete="username">
+      <label for="sip-password">SIP password</label>
+      <input id="sip-password" type="password" autocomplete="current-password">
+      <p class="hint">Domain: <code id="sip-domain"></code></p>
+      <div class="actions">
+        <button id="register-button" type="button">Register</button>
+        <button id="unregister-button" class="secondary" type="button" disabled>Disconnect</button>
+      </div>
+    </section>
+
+    <section class="card" aria-labelledby="call-heading">
+      <div class="section-heading">
+        <h2 id="call-heading">Audio call</h2>
+        <span id="call-status" class="status idle">Idle</span>
+      </div>
+      <label for="call-target">Destination user or SIP URI</label>
+      <input id="call-target" autocomplete="off">
+      <div class="actions">
+        <button id="call-button" type="button" disabled>Call</button>
+        <button id="answer-button" type="button" disabled>Answer</button>
+        <button id="reject-button" class="secondary" type="button" disabled>Reject</button>
+        <button id="hangup-button" class="danger" type="button" disabled>Hang up</button>
+      </div>
+      <audio id="remote-audio" autoplay></audio>
+    </section>
+
+    <section class="card log-card" aria-labelledby="log-heading">
+      <div class="section-heading">
+        <h2 id="log-heading">Event log</h2>
+        <button id="clear-log-button" class="text-button" type="button">Clear</button>
+      </div>
+      <ol id="event-log" aria-live="polite"></ol>
+    </section>
   </main>
 </body>
 </html>

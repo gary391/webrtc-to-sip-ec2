@@ -19,6 +19,10 @@ for required in \
   'auth_db-create.sql' \
   'usrloc-create.sql' \
   'GRANT SELECT, INSERT, UPDATE, DELETE' \
+  'INSERT INTO subscriber' \
+  'SIP_USER' \
+  'SIP_PEER_USER' \
+  'ON DUPLICATE KEY UPDATE' \
   "'127.0.0.1'" \
   'systemctl disable --now mariadb'; do
   grep -Fq "$required" "$script" || {

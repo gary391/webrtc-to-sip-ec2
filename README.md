@@ -49,6 +49,10 @@ Trixie packages.
 
 See [docs/VERSION_POLICY.md](docs/VERSION_POLICY.md) for the upgrade policy.
 
+The browser demo uses a pinned, locally served JsSIP bundle under its MIT
+license. See [docs/BROWSER_CLIENT.md](docs/BROWSER_CLIENT.md) for credentials,
+build provenance, and call-test instructions.
+
 ## Development workflow
 
 The planned implementation repository is:

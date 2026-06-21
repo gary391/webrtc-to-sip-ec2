@@ -49,9 +49,16 @@ elif mode == "turn":
 else:
     raise SystemExit(f"unsupported ICE_MODE: {mode}")
 
-rendered = template_path.read_text(encoding="utf-8").replace(
-    "__ICE_SERVERS__", json.dumps(servers, indent=2)
-)
+replacements = {
+    "__SIP_DOMAIN__": json.dumps(os.environ["DOMAIN"]),
+    "__WEB_SOCKET_URI__": json.dumps(f"wss://{os.environ['DOMAIN']}/ws"),
+    "__DEFAULT_SIP_USER__": json.dumps(os.environ["SIP_USER"]),
+    "__DEFAULT_PEER_USER__": json.dumps(os.environ["SIP_PEER_USER"]),
+    "__ICE_SERVERS__": json.dumps(servers, indent=2),
+}
+rendered = template_path.read_text(encoding="utf-8")
+for placeholder, value in replacements.items():
+    rendered = rendered.replace(placeholder, value)
 output_path.write_text(rendered, encoding="utf-8")
 PY
 

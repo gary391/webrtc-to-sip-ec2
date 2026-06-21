@@ -10,6 +10,7 @@ new_env() {
   local enable_turn=$2
   sed \
     -e 's/SIP_PASSWORD=change-me/SIP_PASSWORD=sip-secret-123456/' \
+    -e 's/SIP_PEER_PASSWORD=change-me/SIP_PEER_PASSWORD=peer-secret-123456/' \
     -e 's/DB_ROOT_PASSWORD=change-me/DB_ROOT_PASSWORD=root-secret-123456/' \
     -e 's/DB_KAMAILIO_PASSWORD=change-me/DB_KAMAILIO_PASSWORD=db-secret-12345678/' \
     -e 's/TURN_PASSWORD=change-me/TURN_PASSWORD=turn-secret-123456/' \
@@ -32,6 +33,9 @@ ENV_FILE="$TMP_DIR/stun.env" "$ROOT_DIR/deploy/common/validate-env.sh" >/dev/nul
 ENV_FILE="$TMP_DIR/stun.env" OUTPUT_FILE="$TMP_DIR/stun.js" \
   "$ROOT_DIR/deploy/native/render-client-config.sh" >/dev/null
 assert_contains "$TMP_DIR/stun.js" 'stun:stun.l.google.com:19302'
+assert_contains "$TMP_DIR/stun.js" 'wss://sip.example.com/ws'
+assert_contains "$TMP_DIR/stun.js" 'defaultSipUser: "websip"'
+assert_contains "$TMP_DIR/stun.js" 'defaultPeerUser: "softphone"'
 if grep -Fq 'turn:' "$TMP_DIR/stun.js"; then
   printf 'STUN mode unexpectedly rendered TURN entries\n' >&2
   exit 1
@@ -40,7 +44,7 @@ fi
 new_env none false
 ENV_FILE="$TMP_DIR/none.env" OUTPUT_FILE="$TMP_DIR/none.js" \
   "$ROOT_DIR/deploy/native/render-client-config.sh" >/dev/null
-assert_contains "$TMP_DIR/none.js" 'var iceServers = [];'
+assert_contains "$TMP_DIR/none.js" 'iceServers: []'
 
 new_env turn true
 ENV_FILE="$TMP_DIR/turn.env" OUTPUT_FILE="$TMP_DIR/turn.js" \

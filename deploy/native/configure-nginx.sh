@@ -30,6 +30,13 @@ fi
 
 install -d -m 0755 "$WEB_CLIENT_ROOT"
 install -m 0644 "$ROOT_DIR/templates/client/index.html" "$WEB_CLIENT_ROOT/index.html"
+install -m 0644 "$ROOT_DIR/templates/client/app.js" "$WEB_CLIENT_ROOT/app.js"
+install -m 0644 "$ROOT_DIR/templates/client/styles.css" "$WEB_CLIENT_ROOT/styles.css"
+install -d -m 0755 "$WEB_CLIENT_ROOT/vendor"
+install -m 0644 "$ROOT_DIR/templates/client/vendor/jssip-3.13.8.min.js" \
+  "$WEB_CLIENT_ROOT/vendor/jssip-3.13.8.min.js"
+install -m 0644 "$ROOT_DIR/templates/client/vendor/JSSIP-LICENSE.md" \
+  "$WEB_CLIENT_ROOT/vendor/JSSIP-LICENSE.md"
 OUTPUT_FILE=$WEB_CLIENT_ROOT/config.js ENV_FILE=$ENV_FILE \
   "$ROOT_DIR/deploy/native/render-client-config.sh" >/dev/null
 

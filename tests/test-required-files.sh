@@ -16,6 +16,12 @@ required=(
   docs/VALIDATION.md
   docs/TROUBLESHOOTING.md
   docs/CLEANUP.md
+  docs/BROWSER_CLIENT.md
+  templates/client/app.js
+  templates/client/styles.css
+  templates/client/vendor/jssip-3.13.8.min.js
+  templates/client/vendor/JSSIP-LICENSE.md
+  templates/client/vendor/README.md
 )
 
 for file in "${required[@]}"; do
