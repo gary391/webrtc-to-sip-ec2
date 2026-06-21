@@ -81,7 +81,9 @@
         const [stream] = event.streams;
         if (stream) {
           elements.remoteAudio.srcObject = stream;
-          elements.remoteAudio.play().catch(() => appendLog('Use the page controls to allow audio playback'));
+          elements.remoteAudio.muted = false;
+          elements.remoteAudio.volume = 1;
+          elements.remoteAudio.play().catch(() => appendLog('Remote audio is ready; press Play in the audio controls'));
         }
       });
     });
@@ -92,6 +94,7 @@
       elements.answer.disabled = true;
       elements.reject.disabled = true;
       appendLog('Call connected');
+      elements.remoteAudio.play().catch(() => appendLog('Press Play in the audio controls to hear the call'));
     });
     const finish = (event) => {
       appendLog(`Call finished: ${event.cause || 'ended'}`);
