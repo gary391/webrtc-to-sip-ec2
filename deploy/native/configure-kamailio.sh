@@ -5,6 +5,8 @@ ROOT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)
 ENV_FILE=${ENV_FILE:-$ROOT_DIR/.env}
 TEMPLATE_FILE=${TEMPLATE_FILE:-$ROOT_DIR/templates/kamailio/kamailio.cfg.template}
 OUTPUT_FILE=${OUTPUT_FILE:-/etc/kamailio/kamailio.cfg}
+SYSTEMD_DROP_IN_SOURCE=${SYSTEMD_DROP_IN_SOURCE:-$ROOT_DIR/templates/systemd/kamailio.service.d/database.conf}
+SYSTEMD_DROP_IN_FILE=${SYSTEMD_DROP_IN_FILE:-/etc/systemd/system/kamailio.service.d/database.conf}
 
 if [[ ${ALLOW_NON_ROOT:-false} != true && $EUID -ne 0 ]]; then
   printf 'ERROR: Kamailio configuration must run as root.\n' >&2
@@ -32,6 +34,8 @@ if command -v kamailio >/dev/null 2>&1; then
 fi
 
 if [[ ${SKIP_SYSTEMD:-false} != true ]]; then
+  install -D -m 0644 "$SYSTEMD_DROP_IN_SOURCE" "$SYSTEMD_DROP_IN_FILE"
+  systemctl daemon-reload
   systemctl disable --now kamailio >/dev/null 2>&1 || true
 fi
 

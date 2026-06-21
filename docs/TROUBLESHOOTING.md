@@ -25,3 +25,14 @@ ss -lntup
 journalctl -u kamailio -u rtpengine-daemon -u nginx -u mariadb -n 200 --no-pager
 make collect-debug
 ```
+
+If Kamailio failed during boot because MariaDB was not ready, apply the service
+dependency and restart it:
+
+```bash
+sudo make native-configure-kamailio
+sudo systemctl enable --now kamailio
+```
+
+The configured systemd drop-in requires MariaDB and orders Kamailio after it on
+subsequent boots.
