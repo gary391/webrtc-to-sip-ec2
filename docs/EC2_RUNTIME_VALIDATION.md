@@ -31,12 +31,15 @@ Certificate expiry: 2026-06-27
 - Nginx is active with trusted HTTPS and the WSS proxy configuration.
 - The expanded on-instance health check passes, including HTTPS on TCP 443.
 - External HTTPS returns HTTP 200 with the expected security headers.
+- JsSIP 3.13.8 and its MIT license are served locally with the reviewed checksum.
+- The `websip` and `softphone` subscribers exist for the IP-address realm.
+- Authenticated JsSIP registration succeeds over the public trusted WSS path.
 - Coturn is inactive as expected in the default STUN-first mode.
 
 ## Remaining
 
 - Confirm the observed public address is a CloudFormation-managed Elastic IP.
-- Remove the temporary public TCP port 80 security-group rule.
 - Reopen port 80 near certificate expiry for manual renewal unless validation
   access is deliberately automated.
-- Resolve the browser-client distribution task and validate two-way audio.
+- Register a desktop SIP softphone as `softphone` and validate two-way audio,
+  dialog teardown, and relay rejection.

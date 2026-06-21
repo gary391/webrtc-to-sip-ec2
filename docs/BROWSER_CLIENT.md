@@ -22,6 +22,26 @@ Both passwords are generated independently and remain in the mode-0600 `.env`.
 Configure the browser with `SIP_USER` and a desktop SIP client with
 `SIP_PEER_USER`. Both use the configured `DOMAIN` as registrar/realm.
 
+Retrieve the generated demo credentials from the EC2 host when configuring the
+two clients:
+
+```bash
+grep -E '^SIP_(USER|PASSWORD|PEER_USER|PEER_PASSWORD)=' \
+  /opt/webrtc-to-sip/source/.env
+```
+
+Desktop softphone settings for the validated EC2 instance:
+
+```text
+Display name: softphone
+Username / authentication user: value of SIP_PEER_USER
+Password: value of SIP_PEER_PASSWORD
+Domain / registrar / server: 44.228.97.60
+Port: 5060
+Transport: UDP
+Outbound proxy: none
+```
+
 ## Browser flow
 
 1. Open the HTTPS endpoint from an address allowed by `DemoClientCidr`.
