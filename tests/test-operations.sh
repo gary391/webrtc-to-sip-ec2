@@ -7,6 +7,7 @@ for script in \
   deploy/native/configure.sh \
   deploy/native/install-certbot-ip.sh \
   deploy/native/issue-ip-certificate.sh \
+  deploy/native/renew-ip-certificate.sh \
   deploy/native/start-services.sh \
   deploy/native/stop-services.sh \
   deploy/native/status.sh \
@@ -38,5 +39,8 @@ grep -Fq "'certbot>=5.4,<6'" "$ROOT_DIR/deploy/native/install-certbot-ip.sh"
 grep -Fq 'systemctl disable --now certbot.timer' "$ROOT_DIR/deploy/native/install-certbot-ip.sh"
 grep -Fq -- '--preferred-profile shortlived' "$ROOT_DIR/deploy/native/issue-ip-certificate.sh"
 grep -Fq -- '--ip-address "$PUBLIC_IPV4"' "$ROOT_DIR/deploy/native/issue-ip-certificate.sh"
+grep -Fq 'systemctl stop nginx' "$ROOT_DIR/deploy/native/renew-ip-certificate.sh"
+grep -Fq 'trap restore_nginx EXIT' "$ROOT_DIR/deploy/native/renew-ip-certificate.sh"
+grep -Fq 'ACME_STAGING=$ACME_STAGING' "$ROOT_DIR/deploy/native/renew-ip-certificate.sh"
 
 printf 'Operational tooling static tests passed.\n'

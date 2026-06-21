@@ -108,6 +108,9 @@ older `/usr/bin/certbot`, not the isolated IP-capable client. For this demo,
 reopen port 80 near expiry and run:
 
 ```bash
-sudo ACME_STAGING=false make issue-ip-certificate
-sudo systemctl reload nginx
+sudo ACME_STAGING=true make renew-ip-certificate
+sudo ACME_STAGING=false make renew-ip-certificate
 ```
+
+Follow the complete validation-window and verification procedure in
+[`CERTIFICATE_RENEWAL.md`](CERTIFICATE_RENEWAL.md).

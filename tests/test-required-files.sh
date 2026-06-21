@@ -13,6 +13,7 @@ required=(
   docs/INSTANCE_SIZING.md
   docs/ICE_STUN_TURN_TROUBLESHOOTING.md
   docs/NATIVE_EC2_INSTALL.md
+  docs/CERTIFICATE_RENEWAL.md
   docs/VALIDATION.md
   docs/TROUBLESHOOTING.md
   docs/CLEANUP.md
