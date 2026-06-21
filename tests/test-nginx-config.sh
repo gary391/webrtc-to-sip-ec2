@@ -51,6 +51,8 @@ grep -Fq "Microphone blocked. Allow microphone access" "$TMP_DIR/www/app.js"
 grep -Fq "elements.hangup.addEventListener('click', terminateActiveSession)" "$TMP_DIR/www/app.js"
 grep -Fq "appendLog('Ending call')" "$TMP_DIR/www/app.js"
 grep -Fq 'Remote audio is ready; press Play' "$TMP_DIR/www/app.js"
+grep -Fq 'event.streams[0] || new MediaStream([event.track])' "$TMP_DIR/www/app.js"
+grep -Fq 'Remote audio playback started' "$TMP_DIR/www/app.js"
 if grep -Eq 'TLSv1(\.0|\.1)?[ ;]' "$TMP_DIR/nginx.conf"; then
   printf 'Nginx configuration enables obsolete TLS\n' >&2
   exit 1

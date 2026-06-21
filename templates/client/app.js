@@ -28,6 +28,7 @@
   elements.user.value = config.defaultSipUser;
   elements.target.value = config.defaultPeerUser;
   elements.domain.textContent = config.sipDomain;
+  elements.remoteAudio.addEventListener('playing', () => appendLog('Remote audio playback started'));
 
   function appendLog(message) {
     const item = document.createElement('li');
@@ -78,13 +79,13 @@
 
     session.on('peerconnection', ({ peerconnection }) => {
       peerconnection.addEventListener('track', (event) => {
-        const [stream] = event.streams;
-        if (stream) {
-          elements.remoteAudio.srcObject = stream;
-          elements.remoteAudio.muted = false;
-          elements.remoteAudio.volume = 1;
-          elements.remoteAudio.play().catch(() => appendLog('Remote audio is ready; press Play in the audio controls'));
-        }
+        const stream = event.streams[0] || new MediaStream([event.track]);
+        elements.remoteAudio.srcObject = stream;
+        elements.remoteAudio.muted = false;
+        elements.remoteAudio.volume = 1;
+        appendLog(`Remote ${event.track.kind} track received`);
+        event.track.addEventListener('unmute', () => appendLog('Remote audio packets received'), { once: true });
+        elements.remoteAudio.play().catch(() => appendLog('Remote audio is ready; press Play in the audio controls'));
       });
     });
     session.on('progress', () => setStatus(elements.callStatus, 'Ringing', 'pending'));
