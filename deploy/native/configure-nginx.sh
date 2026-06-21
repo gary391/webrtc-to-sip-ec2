@@ -37,7 +37,8 @@ install -m 0644 "$ROOT_DIR/templates/client/vendor/jssip-3.13.8.min.js" \
   "$WEB_CLIENT_ROOT/vendor/jssip-3.13.8.min.js"
 install -m 0644 "$ROOT_DIR/templates/client/vendor/JSSIP-LICENSE.md" \
   "$WEB_CLIENT_ROOT/vendor/JSSIP-LICENSE.md"
-OUTPUT_FILE=$WEB_CLIENT_ROOT/config.js ENV_FILE=$ENV_FILE \
+TEMPLATE_FILE=$ROOT_DIR/templates/client/config.js.template \
+  OUTPUT_FILE=$WEB_CLIENT_ROOT/config.js ENV_FILE=$ENV_FILE \
   "$ROOT_DIR/deploy/native/render-client-config.sh" >/dev/null
 
 OUTPUT_MODE=0644 "$ROOT_DIR/deploy/common/render-template.sh" \

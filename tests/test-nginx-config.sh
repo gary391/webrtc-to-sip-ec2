@@ -17,6 +17,7 @@ sed \
   "$ROOT_DIR/.env.example" > "$TMP_DIR/test.env"
 
 ENV_FILE=$TMP_DIR/test.env OUTPUT_FILE=$TMP_DIR/nginx.conf \
+  TEMPLATE_FILE=$ROOT_DIR/templates/nginx/webrtc-to-sip.conf.template \
   ALLOW_NON_ROOT=true ALLOW_MISSING_TLS=true SKIP_NGINX_ENABLE=true \
   SKIP_NGINX_TEST=true SKIP_SYSTEMD=true \
   "$ROOT_DIR/deploy/native/configure-nginx.sh" >/dev/null
