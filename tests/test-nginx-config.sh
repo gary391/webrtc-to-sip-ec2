@@ -24,6 +24,7 @@ ENV_FILE=$TMP_DIR/test.env OUTPUT_FILE=$TMP_DIR/nginx.conf \
 for expected in \
   'listen 443 ssl;' \
   'ssl_protocols TLSv1.2 TLSv1.3;' \
+  'add_header Permissions-Policy "microphone=(self)" always;' \
   'location = /ws {' \
   'proxy_pass http://127.0.0.1:8080;' \
   'proxy_set_header Upgrade $http_upgrade;' \
@@ -42,6 +43,8 @@ done
 grep -Fq 'stun:stun.l.google.com:19302' "$TMP_DIR/www/config.js"
 grep -Fq 'wss://sip.example.com/ws' "$TMP_DIR/www/config.js"
 grep -Fq 'new JsSIP.WebSocketInterface' "$TMP_DIR/www/app.js"
+grep -Fq 'navigator.mediaDevices.getUserMedia' "$TMP_DIR/www/app.js"
+grep -Fq "Microphone blocked. Allow microphone access" "$TMP_DIR/www/app.js"
 if grep -Eq 'TLSv1(\.0|\.1)?[ ;]' "$TMP_DIR/nginx.conf"; then
   printf 'Nginx configuration enables obsolete TLS\n' >&2
   exit 1

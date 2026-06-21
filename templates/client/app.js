@@ -22,6 +22,7 @@
 
   let userAgent = null;
   let activeSession = null;
+  let localMediaStream = null;
 
   elements.user.value = config.defaultSipUser;
   elements.target.value = config.defaultPeerUser;
@@ -45,6 +46,12 @@
     elements.call.disabled = !registered || Boolean(activeSession);
   }
 
+  function releaseLocalMedia() {
+    if (!localMediaStream) return;
+    localMediaStream.getTracks().forEach((track) => track.stop());
+    localMediaStream = null;
+  }
+
   function setSession(session, incoming = false) {
     activeSession = session;
     const active = Boolean(session);
@@ -53,6 +60,7 @@
     elements.answer.disabled = !incoming;
     elements.reject.disabled = !incoming;
     if (!active) {
+      releaseLocalMedia();
       setStatus(elements.callStatus, 'Idle');
       elements.remoteAudio.srcObject = null;
     }
@@ -88,11 +96,40 @@
     session.on('failed', finish);
   }
 
-  function mediaOptions() {
+  function mediaErrorMessage(error) {
+    if (!window.isSecureContext || !navigator.mediaDevices?.getUserMedia) {
+      return 'Microphone access requires a supported browser and trusted HTTPS connection';
+    }
+    if (error?.name === 'NotAllowedError') {
+      return "Microphone blocked. Allow microphone access in this site's settings and in your operating system, then retry";
+    }
+    if (error?.name === 'NotFoundError') {
+      return 'No microphone was found. Connect or enable an audio input device, then retry';
+    }
+    if (error?.name === 'NotReadableError') {
+      return 'Microphone is unavailable. Close other apps using it, then retry';
+    }
+    return `Microphone access failed: ${error?.message || 'unknown error'}`;
+  }
+
+  async function mediaOptions() {
+    if (!window.isSecureContext || !navigator.mediaDevices?.getUserMedia) {
+      throw new DOMException('Microphone capture is unavailable', 'NotSupportedError');
+    }
+    localMediaStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
     return {
-      mediaConstraints: { audio: true, video: false },
+      mediaStream: localMediaStream,
       pcConfig: { iceServers: config.iceServers }
     };
+  }
+
+  function handleMediaError(error, incoming = false) {
+    releaseLocalMedia();
+    setStatus(elements.callStatus, 'Microphone blocked', 'error');
+    appendLog(mediaErrorMessage(error));
+    elements.call.disabled = !userAgent?.isRegistered() || Boolean(activeSession);
+    elements.answer.disabled = !incoming;
+    elements.reject.disabled = !incoming;
   }
 
   elements.register.addEventListener('click', () => {
@@ -147,16 +184,30 @@
     setStatus(elements.registrationStatus, 'Offline');
   });
 
-  elements.call.addEventListener('click', () => {
+  elements.call.addEventListener('click', async () => {
     const rawTarget = elements.target.value.trim();
     if (!rawTarget || !userAgent?.isRegistered()) return;
     const target = rawTarget.includes('@') ? rawTarget : `${rawTarget}@${config.sipDomain}`;
-    userAgent.call(`sip:${target.replace(/^sip:/, '')}`, mediaOptions());
+    elements.call.disabled = true;
+    setStatus(elements.callStatus, 'Requesting microphone', 'pending');
+    try {
+      const options = await mediaOptions();
+      userAgent.call(`sip:${target.replace(/^sip:/, '')}`, options);
+    } catch (error) {
+      handleMediaError(error);
+    }
   });
-  elements.answer.addEventListener('click', () => {
-    activeSession?.answer(mediaOptions());
+  elements.answer.addEventListener('click', async () => {
+    if (!activeSession) return;
     elements.answer.disabled = true;
     elements.reject.disabled = true;
+    setStatus(elements.callStatus, 'Requesting microphone', 'pending');
+    try {
+      const options = await mediaOptions();
+      activeSession.answer(options);
+    } catch (error) {
+      handleMediaError(error, true);
+    }
   });
   elements.reject.addEventListener('click', () => activeSession?.terminate({ status_code: 486 }));
   elements.hangup.addEventListener('click', () => activeSession?.terminate());

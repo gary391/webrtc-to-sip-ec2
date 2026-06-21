@@ -49,8 +49,11 @@ Outbound proxy: none
 3. Confirm the event log reports secure WebSocket connection and registration.
 4. Register the peer account in a SIP softphone over UDP 5060.
 5. Call `softphone` from the browser, or call `websip` from the softphone.
-6. Accept the incoming call and validate audio in both directions.
-7. Hang up and confirm both endpoints tear down the dialog.
+6. Allow microphone access when prompted. If it was previously blocked, set
+   microphone access to **Allow** in the browser's site settings and confirm the
+   browser is enabled in the operating system's microphone privacy settings.
+7. Accept the incoming call and validate audio in both directions.
+8. Hang up and confirm both endpoints tear down the dialog.
 
 The default browser media configuration uses the rendered STUN server. TURN is
 not enabled by this client or by the infrastructure unless explicitly selected.
