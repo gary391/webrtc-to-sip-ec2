@@ -1,4 +1,4 @@
-# WebRTC-to-SIP on EC2
+# WebRTC-to-SIP on EC2 [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/gary391/webrtc-to-sip-ec2)
 
 Native Debian 13 deployment tooling for a small, locked-down WebRTC-to-SIP
 demo on one AWS EC2 instance. The default media discovery mode is STUN;
