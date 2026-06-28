@@ -291,7 +291,15 @@
     peerconnection.setRemoteDescription = (description) => {
       if (description?.type !== 'answer') return setRemoteDescription(description);
 
+      const lines = description.sdp.split(/\r?\n/);
+      const interestLines = lines.filter(line => line.startsWith('m=') || line.startsWith('a=ssrc:') || line.startsWith('a=msid'));
+      appendLog('Original Remote SDP key lines: ' + JSON.stringify(interestLines));
+
       const patchedSdp = patchRemoteAnswerMsid(description.sdp);
+      const patchedLines = patchedSdp.split(/\r?\n/);
+      const patchedInterest = patchedLines.filter(line => line.startsWith('m=') || line.startsWith('a=ssrc:') || line.startsWith('a=msid'));
+      appendLog('Patched Remote SDP key lines: ' + JSON.stringify(patchedInterest));
+
       if (patchedSdp === description.sdp) return setRemoteDescription(description);
 
       appendLog('Patched remote SDP answer with media stream ID');
