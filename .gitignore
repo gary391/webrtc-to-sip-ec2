@@ -1,3 +1,4 @@
 .env
 generated/
 debug-*.tar.gz
+.chrome
