@@ -334,7 +334,10 @@
     setStatus(elements.callStatus, incoming ? 'Incoming' : 'Calling', 'pending');
     appendLog(incoming ? `Incoming call from ${session.remote_identity.uri}` : 'Outgoing call started');
 
-    session.on('peerconnection', ({ peerconnection }) => {
+    const setupPeerConnection = (peerconnection) => {
+      if (peerconnection.__setupDone) return;
+      peerconnection.__setupDone = true;
+
       installRemoteAnswerSdpPatch(peerconnection);
       startRtcStats(peerconnection, session);
       peerconnection.addEventListener('track', (event) => {
@@ -347,6 +350,14 @@
         event.track.addEventListener('ended', () => appendLog('Remote audio track ended'), { once: true });
         playRemoteAudio('track');
       });
+    };
+
+    if (session.connection) {
+      setupPeerConnection(session.connection);
+    }
+
+    session.on('peerconnection', ({ peerconnection }) => {
+      setupPeerConnection(peerconnection);
     });
     session.on('trackAdded', () => playRemoteAudio('track-added'));
     session.on('progress', () => setStatus(elements.callStatus, 'Ringing', 'pending'));
