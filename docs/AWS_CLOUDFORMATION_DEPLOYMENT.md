@@ -31,9 +31,9 @@ opening HTTP validation access.
 
 ```text
 AWS region: us-west-2
-KeyPairName: kamailio-course
-AdminCidr: 24.18.193.148/32
-DemoClientCidr: 24.18.193.148/32
+KeyPairName: <key>
+AdminCidr: <IP-Address>
+DemoClientCidr: <IP-Address>
 UseElasticIp: true
 HostedZoneId: <blank>
 DomainName: <blank>
