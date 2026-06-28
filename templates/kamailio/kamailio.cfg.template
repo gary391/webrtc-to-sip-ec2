@@ -15,8 +15,8 @@ tcp_accept_no_cl=yes
 tcp_rd_buf_size=16384
 
 alias="{{DOMAIN}}"
-listen=udp:{{PRIVATE_IPV4}}:{{KAMAILIO_SIP_PORT}}
-listen=tcp:{{PRIVATE_IPV4}}:{{KAMAILIO_SIP_PORT}}
+listen=udp:{{PRIVATE_IPV4}}:{{KAMAILIO_SIP_PORT}} advertise {{PUBLIC_IPV4}}:{{KAMAILIO_SIP_PORT}}
+listen=tcp:{{PRIVATE_IPV4}}:{{KAMAILIO_SIP_PORT}} advertise {{PUBLIC_IPV4}}:{{KAMAILIO_SIP_PORT}}
 listen=tcp:127.0.0.1:{{KAMAILIO_WS_INTERNAL_PORT}}
 
 loadmodule "db_mysql.so"
@@ -46,6 +46,7 @@ loadmodule "rtpengine.so"
 
 modparam("rr", "enable_full_lr", 1)
 modparam("rr", "append_fromtag", 0)
+modparam("rr", "enable_double_rr", 0)
 modparam("auth_db", "db_url", "mysql://{{DB_KAMAILIO_USER}}:{{DB_KAMAILIO_PASSWORD}}@127.0.0.1/{{DB_KAMAILIO_NAME}}")
 modparam("auth_db", "calculate_ha1", 1)
 modparam("auth_db", "password_column", "password")
@@ -72,6 +73,7 @@ request_route {
         }
         setflag(FLT_NAT);
         setbflag(FLB_FROM_WEBRTC);
+        $avp(MEDIA_DIRECTION) = "from-webrtc";
     }
 
     if (is_method("CANCEL")) {
@@ -107,7 +109,10 @@ request_route {
         exit;
     }
 
-    if ($du =~ "transport=ws" || $ru =~ "transport=ws") setbflag(FLB_TO_WEBRTC);
+    if ($du =~ "transport=ws" || $ru =~ "transport=ws") {
+        setbflag(FLB_TO_WEBRTC);
+        $avp(MEDIA_DIRECTION) = "to-webrtc";
+    }
 
     if (is_method("INVITE") && has_body("application/sdp")) {
         route(MEDIA_OFFER);
@@ -147,7 +152,13 @@ route[WITHINDLG] {
     if (!has_totag()) return;
 
     if (loose_route()) {
-        if ($du == "" && !handle_ruri_alias()) {
+        if ($rU != $null && uri == myself) {
+            if (!lookup("location")) {
+                send_reply("404", "Not Here");
+                exit;
+            }
+            if ($du =~ "transport=ws" || $ru =~ "transport=ws") setbflag(FLB_TO_WEBRTC);
+        } else if ($du == "" && !handle_ruri_alias()) {
             send_reply("400", "Bad Route Alias");
             exit;
         }
@@ -182,9 +193,11 @@ route[RELAY] {
 
 onreply_route[MEDIA_REPLY] {
     if (!has_body("application/sdp")) return;
-    if (isbflagset(FLB_FROM_WEBRTC)) {
+    if ($proto =~ "ws") {
+        rtpengine_answer("replace-origin replace-session-connection rtcp-mux-demux DTLS=off SDES-off ICE=remove RTP/AVP");
+    } else if ($avp(MEDIA_DIRECTION) == "from-webrtc" || isbflagset(FLB_FROM_WEBRTC)) {
         rtpengine_answer("replace-origin replace-session-connection rtcp-mux-offer generate-mid DTLS=passive SDES-off ICE=force RTP/SAVPF");
-    } else if (isbflagset(FLB_TO_WEBRTC)) {
+    } else if ($avp(MEDIA_DIRECTION) == "to-webrtc" || isbflagset(FLB_TO_WEBRTC)) {
         rtpengine_answer("replace-origin replace-session-connection rtcp-mux-demux DTLS=off SDES-off ICE=remove RTP/AVP");
     } else {
         rtpengine_answer("replace-origin replace-session-connection");
