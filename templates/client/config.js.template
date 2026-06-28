@@ -2,6 +2,8 @@
 window.clientConfig = Object.freeze({
   sipDomain: __SIP_DOMAIN__,
   webSocketUri: __WEB_SOCKET_URI__,
+  wsTicketAuthEnabled: __WS_TICKET_AUTH_ENABLED__,
+  wsTicketQueryParam: __WS_TICKET_QUERY_PARAM__,
   defaultSipUser: __DEFAULT_SIP_USER__,
   defaultPeerUser: __DEFAULT_PEER_USER__,
   iceServers: __ICE_SERVERS__

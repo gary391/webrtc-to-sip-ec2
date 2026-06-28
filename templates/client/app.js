@@ -29,6 +29,11 @@
   let previousRtcPath = null;
   let rtcStatsSequence = 0;
   let rtcStatsCallId = 'unknown';
+  let webSocketTicket = null;
+
+  window.setWebSocketTicket = (ticket) => {
+    webSocketTicket = String(ticket || '').trim() || null;
+  };
 
   elements.user.value = config.defaultSipUser;
   elements.target.value = config.defaultPeerUser;
@@ -423,6 +428,24 @@
     return `Microphone access failed: ${error?.message || 'unknown error'}`;
   }
 
+  function resolveWebSocketUri() {
+    if (!config.wsTicketAuthEnabled) return config.webSocketUri;
+
+    if (!webSocketTicket && typeof window.getWebSocketTicket === 'function') {
+      window.setWebSocketTicket(window.getWebSocketTicket());
+    }
+    if (!webSocketTicket) {
+      window.setWebSocketTicket(window.prompt('WebSocket ticket') || '');
+    }
+    if (!webSocketTicket) {
+      throw new Error('WebSocket ticket is required');
+    }
+
+    const uri = new URL(config.webSocketUri);
+    uri.searchParams.set(config.wsTicketQueryParam || 'ticket', webSocketTicket);
+    return uri.toString();
+  }
+
   async function mediaOptions() {
     if (!window.isSecureContext || !navigator.mediaDevices?.getUserMedia) {
       throw new DOMException('Microphone capture is unavailable', 'NotSupportedError');
@@ -451,7 +474,16 @@
       return;
     }
 
-    const socket = new JsSIP.WebSocketInterface(config.webSocketUri);
+    let webSocketUri;
+    try {
+      webSocketUri = resolveWebSocketUri();
+    } catch (error) {
+      setStatus(elements.registrationStatus, 'Failed', 'error');
+      appendLog(error?.message || 'WebSocket ticket is required');
+      return;
+    }
+
+    const socket = new JsSIP.WebSocketInterface(webSocketUri);
     userAgent = new JsSIP.UA({
       sockets: [socket],
       uri: `sip:${username}@${config.sipDomain}`,

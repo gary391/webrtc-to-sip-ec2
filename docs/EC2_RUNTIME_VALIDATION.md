@@ -3,16 +3,16 @@
 Validated on 2026-06-20 in `us-west-2`.
 
 ```text
-Instance ID: i-070fe5055535eead6
-Observed public IPv4: 44.228.97.60
-Private IPv4: 10.0.1.36
+Instance ID: ${INSTANCE_ID}
+Observed public IPv4: ${PUBLIC_IPV4}
+Private IPv4: ${PRIVATE_IPV4}
 Operating system: Debian 13 Trixie, amd64
-Validated repository commit: f2539ea
+Validated repository commit: ${VALIDATED_COMMIT}
 Kamailio: 6.1.3
 RTPEngine: 13.5.1.16
 MariaDB: 11.8.6
 IP-capable Certbot: 5.6.0 (isolated under /opt/certbot-ip)
-Certificate SAN: IP Address 44.228.97.60
+Certificate SAN: IP Address ${PUBLIC_IPV4}
 Certificate expiry: 2026-06-27
 ```
 

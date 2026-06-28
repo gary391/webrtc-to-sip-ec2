@@ -27,7 +27,7 @@ required=(
   RTPENGINE_PORT_MIN RTPENGINE_PORT_MAX RTPENGINE_CONTROL_IP
   RTPENGINE_CONTROL_PORT KAMAILIO_WS_INTERNAL_PORT
   KAMAILIO_WSS_INTERNAL_PORT KAMAILIO_SIP_PORT WEB_CLIENT_ROOT
-  TLS_CERT_PATH TLS_KEY_PATH ENABLE_NGINX
+  TLS_CERT_PATH TLS_KEY_PATH ENABLE_NGINX ENABLE_WS_TICKET_AUTH
 )
 
 for name in "${required[@]}"; do
@@ -67,7 +67,7 @@ validate_range() {
   (( 10#$max >= 10#$min )) || fail "$max_name must be greater than or equal to $min_name"
 }
 
-validate_demo_cidr() {
+validate_admin_cidr() {
   local name=$1
   local value=${!name}
   [[ $value =~ ^([0-9]{1,3}\.){3}[0-9]{1,3}/32$ ]] ||
@@ -75,6 +75,21 @@ validate_demo_cidr() {
   [[ $value != 0.0.0.0/0 ]] || fail "$name must not allow the entire internet"
 
   local address=${value%/32}
+  local octet
+  IFS=. read -r -a octets <<< "$address"
+  for octet in "${octets[@]}"; do
+    (( 10#$octet <= 255 )) || fail "$name contains an invalid IPv4 octet"
+  done
+}
+
+validate_demo_cidr() {
+  local name=$1
+  local value=${!name}
+  [[ $value =~ ^([0-9]{1,3}\.){3}[0-9]{1,3}/(3[0-2]|[12]?[0-9])$ ]] ||
+    fail "$name must be an IPv4 CIDR from /1 to /32"
+  [[ $value != 0.0.0.0/0 ]] || fail "$name must not allow the entire internet"
+
+  local address=${value%/*}
   local octet
   IFS=. read -r -a octets <<< "$address"
   for octet in "${octets[@]}"; do
@@ -102,7 +117,7 @@ validate_ipv4() {
   done
 }
 
-validate_demo_cidr ADMIN_CIDR
+validate_admin_cidr ADMIN_CIDR
 validate_demo_cidr DEMO_CLIENT_CIDR
 validate_ipv4 PUBLIC_IPV4
 validate_ipv4 PRIVATE_IPV4
@@ -122,9 +137,23 @@ validate_secret DB_KAMAILIO_PASSWORD
   fail "ICE_MODE must be one of: stun, none, turn"
 is_bool "$ENABLE_TURN" || fail "ENABLE_TURN must be true or false"
 is_bool "$ENABLE_NGINX" || fail "ENABLE_NGINX must be true or false"
+is_bool "$ENABLE_WS_TICKET_AUTH" || fail "ENABLE_WS_TICKET_AUTH must be true or false"
 [[ $WEB_CLIENT_ROOT == /* ]] || fail "WEB_CLIENT_ROOT must be an absolute path"
 [[ $TLS_CERT_PATH == /* ]] || fail "TLS_CERT_PATH must be an absolute path"
 [[ $TLS_KEY_PATH == /* ]] || fail "TLS_KEY_PATH must be an absolute path"
+
+if [[ $ENABLE_WS_TICKET_AUTH == true ]]; then
+  [[ -n ${WS_AUTH_SIDECAR_URL:-} ]] ||
+    fail "WS_AUTH_SIDECAR_URL is required when ENABLE_WS_TICKET_AUTH=true"
+  [[ -n ${WS_TICKET_QUERY_PARAM:-} ]] ||
+    fail "WS_TICKET_QUERY_PARAM is required when ENABLE_WS_TICKET_AUTH=true"
+  [[ $WS_AUTH_SIDECAR_URL =~ ^http://127[.]0[.]0[.]1:([0-9]+)(/[A-Za-z0-9._~/-]*)?$ ]] ||
+    fail "WS_AUTH_SIDECAR_URL must be an http://127.0.0.1:<port>/<path> URL"
+  is_port "${BASH_REMATCH[1]}" ||
+    fail "WS_AUTH_SIDECAR_URL port must be an integer from 1 to 65535"
+  [[ $WS_TICKET_QUERY_PARAM =~ ^[A-Za-z][A-Za-z0-9_]{0,31}$ ]] ||
+    fail "WS_TICKET_QUERY_PARAM must be a simple query parameter name"
+fi
 
 case "$ICE_MODE" in
   stun)

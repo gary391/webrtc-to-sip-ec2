@@ -59,6 +59,10 @@ if ENV_FILE="$TMP_DIR/turn.env" "$ROOT_DIR/deploy/common/validate-env.sh" >/dev/
 fi
 
 new_env stun false
+sed -i.bak 's/DEMO_CLIENT_CIDR=198.51.100.25\/32/DEMO_CLIENT_CIDR=136.226.0.0\/15/' "$TMP_DIR/stun.env"
+ENV_FILE="$TMP_DIR/stun.env" "$ROOT_DIR/deploy/common/validate-env.sh" >/dev/null
+
+new_env stun false
 sed -i.bak 's#ADMIN_CIDR=198.51.100.25/32#ADMIN_CIDR=0.0.0.0/0#' "$TMP_DIR/stun.env"
 if ENV_FILE="$TMP_DIR/stun.env" "$ROOT_DIR/deploy/common/validate-env.sh" >/dev/null 2>&1; then
   printf 'Broad ADMIN_CIDR unexpectedly passed\n' >&2

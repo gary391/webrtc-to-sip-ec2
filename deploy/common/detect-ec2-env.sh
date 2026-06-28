@@ -58,7 +58,7 @@ trap 'rm -f "$temp_file"' EXIT
 
 {
   printf 'AWS_REGION=%s\n' "$aws_region"
-  printf 'EC2_INSTANCE_ID=%s\n' "$instance_id"
+  printf 'INSTANCE_ID=%s\n' "$instance_id"
   printf 'PRIVATE_IPV4=%s\n' "$private_ipv4"
   printf 'PUBLIC_IPV4=%s\n' "$public_ipv4"
 } > "$temp_file"

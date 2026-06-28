@@ -12,7 +12,7 @@ commit has green GitHub CI.
    curl -s https://checkip.amazonaws.com
    ```
 
-3. Append `/32` and use it for both `AdminCidr` and `DemoClientCidr`.
+3. Append `/32` for `AdminCidr`. For `DemoClientCidr`, use the narrowest CIDR that still covers the browser and SIP endpoint; `/32` is preferred, but a broader range such as `136.226.0.0/15` is acceptable when the SIP/media source address changes across the provider network.
 4. Decide whether to use an Elastic IP. Keep the default `true` when DNS is
    deferred or when an IP-address certificate may be used.
 5. Decide how TLS will be provisioned. A domain is not required to create the
@@ -44,9 +44,10 @@ EnableHttp: false
 EnableTurn: false
 ```
 
-The CIDRs represent the workstation's current public address. If the ISP changes
-it, update both parameters before reconnecting; CloudFormation will update the
-security group without replacing the instance.
+The CIDRs represent the current public addresses used by the workstation and
+SIP/media path. If the ISP, VPN, or carrier NAT changes them, update the
+parameters before reconnecting; CloudFormation will update the security group
+without replacing the instance.
 
 ## Create the stack
 

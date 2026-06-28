@@ -36,6 +36,8 @@ for expected in \
   'if ($rU != $null && uri == myself)' \
   'DTLS=off SDES-off ICE=remove RTP/AVP' \
   'DTLS=passive SDES-off ICE=force RTP/SAVPF' \
+  'if ($rU != $null && uri == myself) {' \
+  'send_reply("404", "Not Here")' \
   'ws_handle_handshake()'; do
   grep -Fq "$expected" "$TMP_DIR/kamailio.cfg" || {
     printf 'Kamailio configuration is missing: %s\n' "$expected" >&2

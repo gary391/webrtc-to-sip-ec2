@@ -77,6 +77,7 @@ test: validate-cloudformation
 	@./tests/test-github-workflow.sh
 	@./tests/test-kamailio-config.sh
 	@./tests/test-nginx-config.sh
+	@./tests/test-ws-ticket-auth.sh
 	@./tests/test-operations.sh
 	@./tests/test-required-files.sh
 

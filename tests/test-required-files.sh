@@ -3,7 +3,9 @@ set -euo pipefail
 
 ROOT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
 required=(
+  AGENTS.md
   docs/AWS_CLOUDFORMATION_DEPLOYMENT.md
+  docs/WEBSOCKET_TICKET_AUTH.md
   docs/DEVELOPMENT_WORKFLOW.md
   docs/REMOTE_DEV_WITH_VSCODE.md
   docs/LOCKED_DOWN_DEMO_NETWORKING.md
@@ -23,6 +25,8 @@ required=(
   templates/client/vendor/jssip-3.13.8.min.js
   templates/client/vendor/JSSIP-LICENSE.md
   templates/client/vendor/README.md
+  scripts/renew-ec2-ip-certificate.sh
+  sidecar/ws_ticket_sidecar.py
 )
 
 for file in "${required[@]}"; do
