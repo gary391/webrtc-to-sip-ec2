@@ -19,13 +19,21 @@ ENV_FILE=$TMP_DIR/test.env OUTPUT_FILE=$TMP_DIR/kamailio.cfg \
 
 for expected in \
   'alias="sip.example.com"' \
-  'listen=udp:10.0.1.25:5060' \
+  'listen=udp:10.0.1.25:5060 advertise 203.0.113.10:5060' \
+  'listen=tcp:10.0.1.25:5060 advertise 203.0.113.10:5060' \
   'listen=tcp:127.0.0.1:8080' \
+  'modparam("rr", "enable_double_rr", 0)' \
   'udp:127.0.0.1:22222' \
   'auth_check("$fd", "subscriber", "1")' \
   'send_reply("403", "Not relaying")' \
   'FLB_FROM_WEBRTC' \
   'FLB_TO_WEBRTC' \
+  '$avp(MEDIA_DIRECTION) = "from-webrtc"' \
+  '$avp(MEDIA_DIRECTION) = "to-webrtc"' \
+  '$avp(MEDIA_DIRECTION) == "from-webrtc"' \
+  '$avp(MEDIA_DIRECTION) == "to-webrtc"' \
+  'if ($proto =~ "ws")' \
+  'if ($rU != $null && uri == myself)' \
   'DTLS=off SDES-off ICE=remove RTP/AVP' \
   'DTLS=passive SDES-off ICE=force RTP/SAVPF' \
   'ws_handle_handshake()'; do
