@@ -472,4 +472,44 @@ Expected:
 - The browser event log should display `Patched remote SDP answer with media stream ID`.
 - Chrome should bind the incoming RTP stream to the remote track via SSRC latching combined with the explicit `a=msid` mapping, leading to increasing `totalSamplesReceived` and playable audio.
 
-Result: pending.
+Result: success (partially, but revealed a race condition).
+
+Observed:
+- The SDP patching logic worked when applied, inserting the necessary `a=msid` mapping.
+- However, logs and audio statistics were still intermittently missing on WebRTC-originated (outgoing) calls, resulting in continued silence in some test runs.
+
+Interpretation:
+- The SDP answer patch was not consistently running because the `peerconnection` event in JsSIP was firing synchronously *before* the application had registered the event listener.
+
+### Experiment 11: Fix Outgoing Call peerconnection Listener Race Condition
+
+Date: 2026-06-28T16:20-07:00
+
+Change:
+- Updated `attachSession()` in `templates/client/app.js` to check if `session.connection` already exists at the time the session is attached.
+- If it exists, immediately invoke `setupPeerConnection()`.
+- Added a `__setupDone` boolean check on the peer connection object to prevent duplicate initialization when the listener subsequently fires.
+
+Expected:
+- The SDP patch and RTC stats should be consistently initialized for both incoming (SIP -> WebRTC) and outgoing (WebRTC -> SIP) calls.
+- WebRTC-originated calls should establish two-way audio reliably.
+
+Result: success.
+
+Observed:
+- The browser successfully logs `Patched remote SDP answer with media stream ID`.
+- Two-way audio functions correctly in both WebRTC -> SIP and SIP -> WebRTC directions.
+- Jitter buffer flushes stopped, and `totalSamplesReceived` increments normally.
+
+---
+
+## Administrative Fix: Enable kamctl FIFO
+
+Date: 2026-06-28T16:30-07:00
+
+Change:
+- Loaded `jsonrpcs.so` in `templates/kamailio/kamailio.cfg.template`.
+- Configured FIFO path `modparam("jsonrpcs", "fifo_name", "/run/kamailio/kamailio_rpc.fifo")` to allow `kamctl` command-line utility to communicate with Kamailio.
+
+Result: success.
+- Administrative commands (e.g. checking registrations and status) execute successfully via `kamctl`.
