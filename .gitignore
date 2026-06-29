@@ -1,4 +1,7 @@
+.scratch
 .env
 generated/
 debug-*.tar.gz
 .chrome
+.DS_Store
+**/.DS_Store
