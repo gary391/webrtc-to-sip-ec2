@@ -22,7 +22,7 @@ for expected in \
   'listen=udp:10.0.1.25:5060 advertise 203.0.113.10:5060' \
   'listen=tcp:10.0.1.25:5060 advertise 203.0.113.10:5060' \
   'listen=tcp:127.0.0.1:8080' \
-  'modparam("rr", "enable_double_rr", 0)' \
+  'modparam("rr", "enable_double_rr", 1)' \
   'udp:127.0.0.1:22222' \
   'auth_check("$fd", "subscriber", "1")' \
   'send_reply("403", "Not relaying")' \
