@@ -513,3 +513,24 @@ Change:
 
 Result: success.
 - Administrative commands (e.g. checking registrations and status) execute successfully via `kamctl`.
+
+---
+
+### Experiment 12: Enable Double Record-Route for In-Dialog Routing
+
+Date: 2026-06-28T17:30-07:00
+
+Change:
+- Changed `modparam("rr", "enable_double_rr", 0)` to `1` in `templates/kamailio/kamailio.cfg.template`.
+- Updated `tests/test-kamailio-config.sh` to assert `enable_double_rr` is `1`.
+
+Expected:
+- When a WebRTC-originated call (WebRTC -> SIP) is established, Kamailio will write two Record-Route headers (the public UDP hop facing the SIP client and the internal WebSocket loopback hop facing the browser).
+- The external SIP endpoint should receive a routable public UDP IP as the first route hop and route the in-dialog `BYE` successfully back to Kamailio.
+- The browser WebRTC client should receive the `BYE` and disconnect the call.
+
+Result: success.
+
+Observed:
+- Disconnecting the call on the SIP side immediately triggers the `ended` event on the browser WebRTC client.
+- The web client interface updates call status to `Idle` immediately.
