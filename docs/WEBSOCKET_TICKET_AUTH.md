@@ -23,8 +23,8 @@ The design relies on Nginx's `auth_request` module to perform synchronous inline
    }
    ```
 5. **Sidecar Validation:** Nginx proxies the subrequest to the local validation sidecar (on loopback), sending the ticket value in the `X-WS-Ticket` header.
-6. **Handshake Resolution:** 
-   * If the ticket is valid and unused, the sidecar returns **`204 No Content`**. Nginx then strips the ticket from the query parameters (replacing it with `$uri` to prevent token leakage downstream) and forwards the clean WebSocket upgrade to Kamailio.
+ 6. **Handshake Resolution:** 
+   * If the ticket is valid and unused, the sidecar returns **`204 No Content`**. Nginx then strips the ticket from the query parameters (replacing it with `$uri` to prevent token leakage downstream) and forwards the clean WebSocket upgrade to Kamailio, **passing the ticket in the `X-WS-Ticket` HTTP header**.
    * If the ticket is missing, malformed, expired, or already consumed, the sidecar returns **`401`** or **`403`**. Nginx rejects the WebSocket connection immediately, and Kamailio never sees the request.
 
 ---
@@ -52,7 +52,7 @@ sequenceDiagram
         Sidecar-->>Nginx: HTTP 204 No Content
         deactivate Sidecar
         Note over Nginx: Scrubs ticket parameter<br/>from request URI
-        Nginx->>Kamailio: HTTP Upgrade GET /ws (Cleaned)
+        Nginx->>Kamailio: HTTP Upgrade GET /ws (Header X-WS-Ticket: tk_xyz)
         activate Kamailio
         Kamailio-->>Browser: 101 Switching Protocols
         Note over Browser, Kamailio: WebSocket established.<br/>SIP Registration/Calls proceed normally.

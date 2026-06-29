@@ -34,7 +34,15 @@ WS_TICKET_AUTH_NGINX_BLOCK="        # WebSocket ticket auth disabled"
 WS_AUTH_LOCATION_NGINX_BLOCK="    # WebSocket ticket auth disabled"
 WS_KAMAILIO_PROXY_PASS="http://127.0.0.1:${KAMAILIO_WS_INTERNAL_PORT}"
 if [[ $ENABLE_WS_TICKET_AUTH == true ]]; then
-  WS_TICKET_AUTH_NGINX_BLOCK="        auth_request /ws-auth;"
+  WS_TICKET_AUTH_NGINX_BLOCK=$(cat <<EOF
+        auth_request /ws-auth;
+        set \$ws_ticket "";
+        if (\$request_uri ~* "[?&]${WS_TICKET_QUERY_PARAM}=([^&]+)") {
+            set \$ws_ticket \$1;
+        }
+        proxy_set_header X-WS-Ticket \$ws_ticket;
+EOF
+)
   WS_KAMAILIO_PROXY_PASS="http://127.0.0.1:${KAMAILIO_WS_INTERNAL_PORT}\$uri"
   WS_AUTH_LOCATION_NGINX_BLOCK=$(cat <<EOF
 
