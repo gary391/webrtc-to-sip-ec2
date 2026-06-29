@@ -35,6 +35,7 @@ loadmodule "xlog.so"
 loadmodule "sanity.so"
 loadmodule "ctl.so"
 loadmodule "cfg_rpc.so"
+loadmodule "jsonrpcs.so"
 loadmodule "auth.so"
 loadmodule "auth_db.so"
 loadmodule "usrloc.so"
@@ -44,6 +45,7 @@ loadmodule "xhttp.so"
 loadmodule "websocket.so"
 loadmodule "rtpengine.so"
 
+modparam("jsonrpcs", "fifo_name", "/run/kamailio/kamailio_rpc.fifo")
 modparam("rr", "enable_full_lr", 1)
 modparam("rr", "append_fromtag", 0)
 modparam("rr", "enable_double_rr", 0)
