@@ -149,3 +149,33 @@ To test this feature on the deployment host (`kamdemo`), execute the following s
 1. Click **Register** on the client.
 2. Enter a random fake string (e.g., `invalid-token-123`).
 3. **Result:** The connection fails. The sidecar logs show `status=401 reason=malformed` (or `reason=unknown` if it matches token string format but is not in the state file).
+
+---
+
+## 6. Failure Modes, Edge Cases, & Mitigations
+
+During operations, the ticket validation flow may encounter various edge cases and failure modes. The table below outlines these scenarios:
+
+| Failure Scenario | Trigger | HTTP Status | Browser Behavior | Consequences & Risks |
+|---|---|---|---|---|
+| **Expired Ticket** | Valid ticket token, but `now() > expires_at` (60s TTL expired) | `401 Unauthorized` | Handshake fails. Browser triggers immediate reconnect loop. | **Retry Storm:** Browser client spams Nginx and Sidecar with the same invalid ticket indefinitely. |
+| **Reused Ticket** | Valid ticket token, but `consumed_at` is already set | `403 Forbidden` | Handshake fails. Browser triggers immediate reconnect loop. | **Retry Storm:** Infinite tight reconnect loop spamming authentication servers. |
+| **Invalid/Malformed Ticket** | Fake/unminted ticket string, or wrong format | `401` or `403` | Handshake fails. Browser triggers immediate reconnect loop. | **Retry Storm** and possible brute-force attempt vector if not rate-limited. |
+| **Sidecar Server Down** | Sidecar process crashed, not running, or network timeout | `500 Internal Server Error` | Handshake fails. Browser triggers immediate reconnect loop. | **Fail-Closed:** Users cannot connect to Kamailio. Nginx logs 500 error spikes. |
+| **State File Lock Contention** | Multiple simultaneous validations block state file write lock | Latency spike / possible `504 Gateway Timeout` | Slow connection startup. | Validation requests backlog at Nginx. |
+
+### The "Retry Storm" Problem
+Because standard WebRTC libraries (including JsSIP) are designed to handle dropped connections by auto-reconnecting immediately, a ticket validation failure (which is permanent for that ticket) triggers an infinite loop of reconnect attempts. The browser continuously sends the same stale ticket, flooding the Nginx proxy and loopback sidecar.
+
+### Mitigations & Future Tasks (To Be Implemented)
+To address the risks highlighted above, the following tasks have been registered in [TASKS.md](file:///Users/gauyada/WorkDocs/03_KNOWLEDGE/05_SIP/10_WebRTC/webrtc-to-sip-ec2/TASKS.md):
+
+1. **Client-Side Reconnect Backoff & Max Retries (WTS-022):**
+   * Intercept validation-related WebSocket handshake failures (e.g. HTTP 401, 403, 500 status codes) in `app.js`.
+   * Disable auto-reconnect or apply exponential backoff (e.g. wait 2s, 4s, 8s... up to a max of 5 retries) and request the user to fetch a fresh ticket/log in again instead of looping indefinitely.
+2. **Nginx Rate Limiting (WTS-023):**
+   * Configure Nginx `limit_req_zone` targeting `/ws` and `/ws-auth` endpoints.
+   * Restrict excessive connection attempts to a safe threshold (e.g., 5 requests per minute per IP address) to block retry storms at the edge.
+3. **Robust Fail-Closed Handling & Health Checks (WTS-024):**
+   * Implement status monitoring for the sidecar validator process.
+   * Enforce fail-closed handling in Nginx when the sidecar is unresponsive, ensuring security integrity is maintained while logging clear diagnostics.

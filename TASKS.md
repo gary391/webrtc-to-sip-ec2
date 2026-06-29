@@ -24,7 +24,10 @@ Status values: `TODO`, `IN PROGRESS`, `BLOCKED`, `DONE`.
 | WTS-018 | DONE | Prepare the GitHub-based development workflow | Standalone private Git repository, green CI, iteration runbook, and implementation `RepoUrl` are ready | WTS-003 |
 | WTS-019 | DONE | Complete infrastructure deployment preflight | Local tests, `cfn-lint`, GitHub CI, CIDRs, key pair, and AWS parameters are confirmed | WTS-018 |
 | WTS-020 | DONE | Resolve browser-client distribution approach | Pinned JsSIP 3.13.8 browser bundle is vendored with npm integrity metadata, reproducible build command, and MIT license | WTS-001 |
-| WTS-021 | IN PROGRESS | Implement optional WebSocket ticket authentication | Spec, env validation, Nginx auth_request rendering, demo sidecar, browser in-memory ticket support, and shell tests are complete; EC2 validation remains pending | WTS-011, WTS-020 |
+| WTS-021 | DONE | Implement optional WebSocket ticket authentication | Spec, env validation, Nginx auth_request rendering, demo sidecar, browser in-memory ticket support, and shell tests are complete; EC2 validation remains pending | WTS-011, WTS-020 |
+| WTS-022 | TODO | Mitigate WebSocket client retry storms in app.js | Implement exponential backoff and connection failure count threshold logic when WebSocket ticket validation fails | WTS-021 |
+| WTS-023 | TODO | Implement Nginx rate limiting for WebSocket auth requests | Configure limit_req zones on Nginx to restrict excessive connection attempts per client IP | WTS-021 |
+| WTS-024 | TODO | Implement sidecar health check status and robust fail-closed handling | Define status monitoring and robust fail-closed response in Nginx when sidecar is unresponsive | WTS-021 |
 
 ## Tracking rule
 
