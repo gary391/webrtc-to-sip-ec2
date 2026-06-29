@@ -36,15 +36,18 @@ WS_KAMAILIO_PROXY_PASS="http://127.0.0.1:${KAMAILIO_WS_INTERNAL_PORT}"
 if [[ $ENABLE_WS_TICKET_AUTH == true ]]; then
   WS_TICKET_AUTH_NGINX_BLOCK="        auth_request /ws-auth;"
   WS_KAMAILIO_PROXY_PASS="http://127.0.0.1:${KAMAILIO_WS_INTERNAL_PORT}\$uri"
-  ws_ticket_arg="\$arg_${WS_TICKET_QUERY_PARAM}"
   WS_AUTH_LOCATION_NGINX_BLOCK=$(cat <<EOF
 
     location = /ws-auth {
         internal;
+        set \$ws_ticket "";
+        if (\$request_uri ~* "[?&]${WS_TICKET_QUERY_PARAM}=([^&]+)") {
+            set \$ws_ticket \$1;
+        }
         proxy_pass ${WS_AUTH_SIDECAR_URL};
         proxy_pass_request_body off;
         proxy_set_header Content-Length "";
-        proxy_set_header X-WS-Ticket ${ws_ticket_arg};
+        proxy_set_header X-WS-Ticket \$ws_ticket;
         proxy_set_header Origin \$http_origin;
         proxy_set_header Host \$host;
         proxy_set_header X-Real-IP \$remote_addr;
