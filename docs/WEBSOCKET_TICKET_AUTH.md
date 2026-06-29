@@ -12,6 +12,8 @@ The design relies on Nginx's `auth_request` module to perform synchronous inline
 
 1. **Ticket Acquisition (Out of Scope):** The browser client obtains a short-lived single-use ticket (`ws_ticket`) from an external authentication/bootstrap service (e.g., during web application login).
 2. **WebSocket Handshake:** The browser opens a secure WebSocket connection targeting the `/ws` path, passing the ticket as a query parameter (e.g., `wss://<DOMAIN>/ws?ticket=tk_123456`).
+   > [!NOTE]
+   > **WS vs WSS Protocol:** WSS (WebSocket Secure) is the WebSocket protocol wrapped in TLS (similar to HTTPS vs HTTP). In Nginx, secure connections are terminated at the server block level (`listen 443 ssl`), meaning the decrypted request path remains `/ws`. There is no separate `/wss` route required in Nginx.
 3. **Nginx Interception:** Nginx intercepts the handshake and triggers a subrequest to `/ws-auth`.
 4. **Ticket Extraction:** Since Nginx subrequests do not automatically inherit query parameters, Nginx extracts the ticket from the raw `$request_uri` variable using a case-insensitive regular expression:
    ```nginx
