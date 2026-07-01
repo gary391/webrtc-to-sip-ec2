@@ -163,14 +163,14 @@ Change:
 - Set `modparam("rr", "enable_double_rr", 0)` so external SIP clients are not given the internal WebSocket hop in Record-Route.
 
 Expected:
-- `SIP -> WebRTC` accepted-call `200 OK` should advertise `{{PUBLIC_IP}}`, not `127.0.0.1` or `10.0.1.36`, in Record-Route.
+- `SIP -> WebRTC` accepted-call `200 OK` should advertise `44.228.97.60`, not `127.0.0.1` or `10.0.1.36`, in Record-Route.
 - SIP client should send the final ACK back through Kamailio.
 - Browser should not end the call with `No ACK`.
 
 Result: success for SIP-originated call setup and teardown.
 
 Observed:
-- `200 OK` advertised `Record-Route: <sip:{{PUBLIC_IP}};lr=on>`.
+- `200 OK` advertised `Record-Route: <sip:44.228.97.60;lr=on>`.
 - SIP client sent final `ACK` for the accepted INVITE to Kamailio.
 - Kamailio forwarded the ACK to the registered WebSocket contact.
 - The call later ended via SIP-side `BYE`; Kamailio forwarded that BYE to WebRTC and returned `200 OK` to the SIP side.

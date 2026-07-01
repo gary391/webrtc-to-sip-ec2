@@ -36,7 +36,7 @@ Desktop softphone settings for the validated EC2 instance:
 Display name: softphone
 Username / authentication user: value of SIP_PEER_USER
 Password: value of SIP_PEER_PASSWORD
-Domain / registrar / server: value of `PUBLIC_IPV4` or `DOMAIN`
+Domain / registrar / server: 44.228.97.60
 Port: 5060
 Transport: UDP
 Outbound proxy: none
@@ -57,21 +57,3 @@ Outbound proxy: none
 
 The default browser media configuration uses the rendered STUN server. TURN is
 not enabled by this client or by the infrastructure unless explicitly selected.
-
-## Optional WebSocket ticket auth
-
-`ENABLE_WS_TICKET_AUTH=false` is the default and keeps the current `/ws` browser
-connection path.
-
-When `ENABLE_WS_TICKET_AUTH=true`, the browser must receive a fresh synthetic
-demo ticket before registration. External bootstrap code can set it without
-storage:
-
-```javascript
-window.setWebSocketTicket(ticket);
-```
-
-If no in-memory ticket exists, the demo client prompts for one. The ticket is
-used only to build the next WebSocket URI and is never written to
-`localStorage` or `sessionStorage`. Refreshes, duplicate tabs, and reconnects
-need a new ticket because tickets are single-use.

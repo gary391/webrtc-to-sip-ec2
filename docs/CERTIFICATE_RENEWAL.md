@@ -13,39 +13,8 @@ running during renewal.
 ```bash
 ssh kamdemo
 sudo openssl x509 \
-  -in "/etc/letsencrypt/live/${PUBLIC_IPV4}/fullchain.pem" \
+  -in /etc/letsencrypt/live/44.228.97.60/fullchain.pem \
   -noout -subject -issuer -dates
-```
-
-## Automated renewal wrapper
-
-From the workstation, run:
-
-```bash
-./scripts/renew-ec2-ip-certificate.sh
-```
-
-Defaults:
-
-```text
-SSH_HOST=kamdemo
-REMOTE_SOURCE_DIR=/opt/webrtc-to-sip/source
-ACME_CIDR=0.0.0.0/0
-```
-
-The wrapper discovers the instance ID and AWS region through IMDSv2 over SSH,
-finds the instance security group with AWS CLI, adds a temporary public TCP/80
-rule, runs staging then production renewal on the instance, verifies local HTTPS
-and certificate dates, and removes the temporary TCP/80 rule in an exit trap.
-
-Override `INSTANCE_ID`, `AWS_REGION`, or `SECURITY_GROUP_ID` when SSH metadata
-discovery or EC2 lookup is not desired:
-
-```bash
-AWS_REGION=us-west-2 \
-INSTANCE_ID=i-0123456789abcdef0 \
-SECURITY_GROUP_ID=sg-0123456789abcdef0 \
-./scripts/renew-ec2-ip-certificate.sh
 ```
 
 ## Open the validation window
@@ -76,7 +45,7 @@ sudo ACME_STAGING=false make renew-ip-certificate
 
 The command stops nginx only while Certbot owns port 80. A trap restores nginx
 after success or failure. Production renewal updates the existing
-`/etc/letsencrypt/live/${PUBLIC_IPV4}/` lineage and prints the new validity dates.
+`/etc/letsencrypt/live/44.228.97.60/` lineage and prints the new validity dates.
 
 ## Close and verify
 
@@ -84,9 +53,9 @@ Immediately remove the temporary HTTP rule from the security group, then run:
 
 ```bash
 systemctl is-active nginx kamailio rtpengine-daemon mariadb
-curl -I "https://${PUBLIC_IPV4}/"
+curl -I https://44.228.97.60/
 sudo openssl x509 \
-  -in "/etc/letsencrypt/live/${PUBLIC_IPV4}/fullchain.pem" \
+  -in /etc/letsencrypt/live/44.228.97.60/fullchain.pem \
   -noout -dates
 ```
 
