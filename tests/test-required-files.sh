@@ -20,6 +20,7 @@ required=(
   docs/TROUBLESHOOTING.md
   docs/CLEANUP.md
   docs/BROWSER_CLIENT.md
+  docs/DEPLOY_FROM_SCRATCH.md
   templates/client/app.js
   templates/client/styles.css
   templates/client/vendor/jssip-3.13.8.min.js
