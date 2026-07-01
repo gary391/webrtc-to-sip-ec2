@@ -21,7 +21,7 @@ The detector requires an IMDSv2 token. It reads the instance identity
 document and public IPv4 metadata, validates the values, and atomically writes a
 non-secret environment file. It never falls back to IMDSv1.
 
-Merge `AWS_REGION`, `INSTANCE_ID`, `PRIVATE_IPV4`, and `PUBLIC_IPV4` into
+Merge `AWS_REGION`, `EC2_INSTANCE_ID`, `PRIVATE_IPV4`, and `PUBLIC_IPV4` into
 the deployment `.env`, then validate:
 
 ```bash

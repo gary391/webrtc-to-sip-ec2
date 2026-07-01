@@ -6,8 +6,6 @@
 - MariaDB and RTPEngine control bind only to loopback.
 - Kamailio authenticates local REGISTER/call traffic and rejects foreign relay.
 - Nginx uses TLS 1.2/1.3 and proxies WebSocket only to loopback.
-- Optional WebSocket ticket auth rejects missing, expired, reused, malformed,
-  or wrong-scope tickets at Nginx before Kamailio sees the upgrade.
 - TURN is disabled by default and anonymous relay is prohibited.
 - `.env`, generated configuration, keys, and debug bundles are not committed.
 - Debug collection redacts the database URL in Kamailio configuration.

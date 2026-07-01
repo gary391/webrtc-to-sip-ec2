@@ -30,42 +30,6 @@ if [[ ${ALLOW_MISSING_TLS:-false} != true ]]; then
   [[ -r $TLS_KEY_PATH ]] || { printf 'ERROR: TLS key is not readable: %s\n' "$TLS_KEY_PATH" >&2; exit 1; }
 fi
 
-WS_TICKET_AUTH_NGINX_BLOCK="        # WebSocket ticket auth disabled"
-WS_AUTH_LOCATION_NGINX_BLOCK="    # WebSocket ticket auth disabled"
-WS_KAMAILIO_PROXY_PASS="http://127.0.0.1:${KAMAILIO_WS_INTERNAL_PORT}"
-if [[ $ENABLE_WS_TICKET_AUTH == true ]]; then
-  WS_TICKET_AUTH_NGINX_BLOCK=$(cat <<EOF
-        auth_request /ws-auth;
-        set \$ws_ticket "";
-        if (\$request_uri ~* "[?&]${WS_TICKET_QUERY_PARAM}=([^&]+)") {
-            set \$ws_ticket \$1;
-        }
-        proxy_set_header X-WS-Ticket \$ws_ticket;
-EOF
-)
-  WS_KAMAILIO_PROXY_PASS="http://127.0.0.1:${KAMAILIO_WS_INTERNAL_PORT}\$uri"
-  WS_AUTH_LOCATION_NGINX_BLOCK=$(cat <<EOF
-
-    location = /ws-auth {
-        internal;
-        set \$ws_ticket "";
-        if (\$request_uri ~* "[?&]${WS_TICKET_QUERY_PARAM}=([^&]+)") {
-            set \$ws_ticket \$1;
-        }
-        proxy_pass ${WS_AUTH_SIDECAR_URL};
-        proxy_pass_request_body off;
-        proxy_set_header Content-Length "";
-        proxy_set_header X-WS-Ticket \$ws_ticket;
-        proxy_set_header Origin \$http_origin;
-        proxy_set_header Host \$host;
-        proxy_set_header X-Real-IP \$remote_addr;
-        proxy_set_header X-Request-ID \$request_id;
-    }
-EOF
-)
-fi
-export WS_TICKET_AUTH_NGINX_BLOCK WS_AUTH_LOCATION_NGINX_BLOCK WS_KAMAILIO_PROXY_PASS
-
 install -d -m 0755 "$WEB_CLIENT_ROOT"
 install -m 0644 "$ROOT_DIR/templates/client/index.html" "$WEB_CLIENT_ROOT/index.html"
 install -m 0644 "$ROOT_DIR/templates/client/app.js" "$WEB_CLIENT_ROOT/app.js"
@@ -81,8 +45,7 @@ TEMPLATE_FILE=$ROOT_DIR/templates/client/config.js.template \
 
 OUTPUT_MODE=0644 "$ROOT_DIR/deploy/common/render-template.sh" \
   "$TEMPLATE_FILE" "$OUTPUT_FILE" DOMAIN WEB_CLIENT_ROOT TLS_CERT_PATH \
-  TLS_KEY_PATH KAMAILIO_WS_INTERNAL_PORT WS_TICKET_AUTH_NGINX_BLOCK \
-  WS_AUTH_LOCATION_NGINX_BLOCK WS_KAMAILIO_PROXY_PASS
+  TLS_KEY_PATH KAMAILIO_WS_INTERNAL_PORT
 
 if [[ ${SKIP_NGINX_ENABLE:-false} != true ]]; then
   ln -sfn "$OUTPUT_FILE" "$ENABLED_FILE"

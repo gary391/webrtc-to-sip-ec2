@@ -52,8 +52,6 @@ else:
 replacements = {
     "__SIP_DOMAIN__": json.dumps(os.environ["DOMAIN"]),
     "__WEB_SOCKET_URI__": json.dumps(f"wss://{os.environ['DOMAIN']}/ws"),
-    "__WS_TICKET_AUTH_ENABLED__": "true" if os.environ["ENABLE_WS_TICKET_AUTH"] == "true" else "false",
-    "__WS_TICKET_QUERY_PARAM__": json.dumps(os.environ.get("WS_TICKET_QUERY_PARAM", "ticket")),
     "__DEFAULT_SIP_USER__": json.dumps(os.environ["SIP_USER"]),
     "__DEFAULT_PEER_USER__": json.dumps(os.environ["SIP_PEER_USER"]),
     "__ICE_SERVERS__": json.dumps(servers, indent=2),

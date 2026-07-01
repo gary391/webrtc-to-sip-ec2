@@ -1,6 +1,5 @@
 .scratch
 .env
-.scratch
 generated/
 debug-*.tar.gz
 .chrome

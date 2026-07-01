@@ -14,8 +14,7 @@ for script in \
   deploy/debug/healthcheck.sh \
   deploy/debug/collect-debug.sh \
   deploy/debug/sip-trace.sh \
-  deploy/debug/rtp-trace.sh \
-  scripts/renew-ec2-ip-certificate.sh; do
+  deploy/debug/rtp-trace.sh; do
   [[ -x $ROOT_DIR/$script ]] || {
     printf 'Operational script is not executable: %s\n' "$script" >&2
     exit 1
@@ -43,11 +42,5 @@ grep -Fq -- '--ip-address "$PUBLIC_IPV4"' "$ROOT_DIR/deploy/native/issue-ip-cert
 grep -Fq 'systemctl stop nginx' "$ROOT_DIR/deploy/native/renew-ip-certificate.sh"
 grep -Fq 'trap restore_nginx EXIT' "$ROOT_DIR/deploy/native/renew-ip-certificate.sh"
 grep -Fq 'ACME_STAGING=$ACME_STAGING' "$ROOT_DIR/deploy/native/renew-ip-certificate.sh"
-grep -Fq 'authorize-security-group-ingress' "$ROOT_DIR/scripts/renew-ec2-ip-certificate.sh"
-grep -Fq 'revoke-security-group-ingress' "$ROOT_DIR/scripts/renew-ec2-ip-certificate.sh"
-grep -Fq 'trap revoke_rule EXIT' "$ROOT_DIR/scripts/renew-ec2-ip-certificate.sh"
-grep -Fq 'sudo ACME_STAGING=true make renew-ip-certificate && sudo ACME_STAGING=false make renew-ip-certificate' \
-  "$ROOT_DIR/scripts/renew-ec2-ip-certificate.sh"
-grep -Fq 'public TCP/80 ingress already exists' "$ROOT_DIR/scripts/renew-ec2-ip-certificate.sh"
 
 printf 'Operational tooling static tests passed.\n'

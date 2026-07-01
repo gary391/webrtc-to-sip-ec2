@@ -34,7 +34,7 @@ CURL_BIN=$TMP_DIR/fake-curl IMDS_BASE_URL=http://imds.test \
   "$ROOT_DIR/deploy/common/detect-ec2-env.sh" >/dev/null
 
 grep -Fxq 'AWS_REGION=us-west-2' "$TMP_DIR/aws-instance.env"
-grep -Fxq 'INSTANCE_ID=i-0123456789abcdef0' "$TMP_DIR/aws-instance.env"
+grep -Fxq 'EC2_INSTANCE_ID=i-0123456789abcdef0' "$TMP_DIR/aws-instance.env"
 grep -Fxq 'PRIVATE_IPV4=10.0.1.25' "$TMP_DIR/aws-instance.env"
 grep -Fxq 'PUBLIC_IPV4=203.0.113.10' "$TMP_DIR/aws-instance.env"
 if stat --version >/dev/null 2>&1; then
